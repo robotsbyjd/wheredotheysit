@@ -658,8 +658,8 @@ export default function App() {
             {unseated.length > 0 && unseated.length < guests.length && (
               <button onClick={runAutoComplete} style={{ width: "100%", padding: "8px 0", border: `1.5px solid ${C.gold}`, borderRadius: 8, background: `${C.gold}10`, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.darkGold, cursor: "pointer" }}>🧩 Auto-Complete ({unseated.length} left)</button>
             )}
-            <div style={{ textAlign: "center", fontSize: 12, color: `${C.warmGray}99`, lineHeight: 1.5, paddingTop: 2 }}>
-              Free forever. If this saved you time (or drama),<br />you can <a href="https://ko-fi.com/placeholder" target="_blank" rel="noopener noreferrer" style={{ color: C.gold, textDecoration: "none", fontWeight: 600 }}>buy me a coffee</a> — thank you!
+            <div style={{ textAlign: "center", fontSize: 16, color: `${C.warmGray}99`, lineHeight: 1.5, paddingTop: 2 }}>
+              Free forever. If this saved you time (or drama),<br />you can <a href="https://ko-fi.com/deptappliedmagic" target="_blank" rel="noopener noreferrer" style={{ color: C.gold, textDecoration: "none", fontWeight: 600 }}>you can tip me here</a> — thank you!
             </div>
           </div>
         </div>
