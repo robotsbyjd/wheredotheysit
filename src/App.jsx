@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const C = {
   cream: "#FDF8F0", blush: "#E8C4B8", sage: "#9CAF88", darkSage: "#6B7F5E",
@@ -1436,6 +1437,7 @@ export default function App() {
       </div>
 
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}*{box-sizing:border-box}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:${C.lightGray};border-radius:3px}`}</style>
+      <SpeedInsights />
     </div>
   );
 }
