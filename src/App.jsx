@@ -353,7 +353,7 @@ function WelcomeModal({ onSelect, isMobile }) {
   ];
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)", backdropFilter: "blur(6px)" }}>
-      <div style={{ background: C.white, borderRadius: 20, width: isMobile ? "95vw" : "min(620px, 92vw)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 80px rgba(0,0,0,0.25)", padding: 0 }}>
+      <div style={{ background: C.white, borderRadius: 20, width: isMobile ? "95vw" : "min(680px, 92vw)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 80px rgba(0,0,0,0.25)", padding: 0 }}>
         <div style={{ padding: isMobile ? "24px 20px 16px" : "36px 36px 20px", textAlign: "center" }}>
           <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: isMobile ? 24 : 32, fontWeight: 700, margin: "0 0 8px", color: C.charcoal, letterSpacing: -0.5 }}>WhereDoTheySit</h1>
           <div style={{ fontSize: 14, color: C.warmGray, lineHeight: 1.6, maxWidth: 440, margin: "0 auto" }}>The free seating planner for weddings, parties & events. Pick a demo to explore, or start fresh.</div>
@@ -401,7 +401,7 @@ function getSeatPos(t) {
   return t.shape === "rect" ? getRectPos(cx, cy, t.seatCount) : getRoundPos(cx, cy, t.seatCount);
 }
 function getTableSize(t) {
-  if (t.shape === "rect") return { w: Math.max(120, Math.ceil(t.seatCount / 2) * 30 + 20), h: 100 };
+  if (t.shape === "rect") return { w: Math.max(150, Math.ceil(t.seatCount / 2) * 30 + 20), h: 100 };
   const r = Math.min(68, 30 + t.seatCount * 4); return { w: (r + 16) * 2, h: (r + 16) * 2 };
 }
 
@@ -488,41 +488,51 @@ function TableViz({ table, gm, gc, onDrop, onRemove, conflicts, onRename, onSeat
   const isRect = table.shape === "rect";
   const sz = getTableSize(table);
   const cx = sz.w / 2, cy = sz.h / 2;
-  const tw = isRect ? Math.max(60, Math.ceil(table.seatCount / 2) * 26) : 58, th = isRect ? 28 : 58;
+  const tw = isRect ? Math.max(60, Math.ceil(table.seatCount / 2) * 26) : 62, th = isRect ? 28 : 62;
   return (<div style={{ position: "absolute", left: table.x, top: table.y, width: sz.w, height: sz.h }}
     onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
     onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
     onDrop={e => { e.preventDefault(); setOver(false); const gid = e.dataTransfer.getData("guestId"); if (gid) onDrop(gid, table.id); }}>
-    {/* Delete button — top-right of table, shows on hover (or always on touch) */}
-    {onDelete && <button onClick={(e) => { e.stopPropagation(); onDelete(table.id); }} style={{ position: "absolute", top: isRect ? cy - th / 2 - 10 : cy - (Math.min(68, 30 + table.seatCount * 4)) - 10, right: isRect ? cx - tw / 2 - 2 : cx - (Math.min(68, 30 + table.seatCount * 4)) + 6, width: 22, height: 22, borderRadius: "50%", border: `1.5px solid ${C.rose}60`, background: C.white, color: C.rose, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0, opacity: hovered ? 1 : 0.35, transition: "opacity 0.15s", zIndex: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>×</button>}
-    <div style={{ position: "absolute", left: cx - tw / 2, top: cy - th / 2, width: tw, height: th, borderRadius: isRect ? 10 : "50%", background: over ? `linear-gradient(135deg, ${C.sage}55, ${C.darkSage}44)` : `linear-gradient(145deg, #EDE7DF, #D8D0C6)`, border: `2px solid ${over ? C.sage : "#C8C0B6"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 1, boxShadow: over ? `0 4px 24px ${C.sage}40` : "0 3px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)" }}>
-      {editing ? <input autoFocus value={nv} onChange={e => setNv(e.target.value)} onBlur={() => { setEditing(false); onRename(table.id, nv); }} onKeyDown={e => { if (e.key === "Enter") { setEditing(false); onRename(table.id, nv); } }} style={{ width: 46, textAlign: "center", border: "none", background: "transparent", fontFamily: "inherit", fontSize: 12, fontWeight: 600, color: C.charcoal, outline: "none" }} />
-        : <span onClick={() => setEditing(true)} style={{ fontSize: 12, fontWeight: 600, color: C.warmGray, cursor: "pointer", textAlign: "center", lineHeight: 1.1 }}>{table.name}</span>}
-      <span style={{ fontSize: 11, color: C.warmGray, opacity: 0.6 }}>{seated}/{table.seatCount}</span>
+    {/* Floating table name label above */}
+    <div style={{ position: "absolute", left: "50%", top: isRect ? cy - th / 2 - 22 : cy - (Math.min(68, 30 + table.seatCount * 4)) - 22, transform: "translateX(-50%)", whiteSpace: "nowrap", zIndex: 4, textAlign: "center" }}>
+      {editing ? <input autoFocus value={nv} onChange={e => setNv(e.target.value)} onBlur={() => { setEditing(false); onRename(table.id, nv); }} onKeyDown={e => { if (e.key === "Enter") { setEditing(false); onRename(table.id, nv); } }} style={{ textAlign: "center", border: `1.5px solid ${C.sage}`, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 700, color: C.charcoal, outline: "none", borderRadius: 6, padding: "2px 8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }} />
+        : <span onClick={() => { setNv(table.name); setEditing(true); }} style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, cursor: "pointer", background: `${C.white}E0`, padding: "2px 8px", borderRadius: 6, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", letterSpacing: -0.2 }}>{table.name}</span>}
     </div>
-    <div style={{ position: "absolute", left: cx - 24, top: cy + th / 2 + 6, display: "flex", gap: 2, zIndex: 3 }}>
+    {/* Delete button */}
+    {onDelete && <button onClick={(e) => { e.stopPropagation(); onDelete(table.id); }} style={{ position: "absolute", top: isRect ? cy - th / 2 - 10 : cy - (Math.min(68, 30 + table.seatCount * 4)) - 10, right: isRect ? cx - tw / 2 - 2 : cx - (Math.min(68, 30 + table.seatCount * 4)) + 6, width: 22, height: 22, borderRadius: "50%", border: `1.5px solid ${C.rose}60`, background: C.white, color: C.rose, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0, opacity: hovered ? 1 : 0, transition: "opacity 0.15s", zIndex: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>×</button>}
+    {/* Table surface */}
+    <div style={{ position: "absolute", left: cx - tw / 2, top: cy - th / 2, width: tw, height: th, borderRadius: isRect ? 10 : "50%", background: over ? `linear-gradient(135deg, ${C.sage}55, ${C.darkSage}44)` : `linear-gradient(145deg, #EDE7DF, #D8D0C6)`, border: `2px solid ${over ? C.sage : "#C8C0B6"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 1, boxShadow: over ? `0 4px 24px ${C.sage}40` : "0 3px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)" }}>
+      <span style={{ fontSize: 12, color: C.warmGray, fontWeight: 600 }}>{seated}/{table.seatCount}</span>
+    </div>
+    {/* +/- buttons — hover only */}
+    <div style={{ position: "absolute", left: cx - 24, top: cy + th / 2 + 6, display: "flex", gap: 2, zIndex: 3, opacity: hovered ? 1 : 0, transition: "opacity 0.15s" }}>
       <button onClick={(e) => { e.stopPropagation(); onSeatChange(table.id, -1); }} style={{ width: 20, height: 20, borderRadius: "50%", border: `1px solid ${C.lightGray}`, background: C.white, cursor: "pointer", fontSize: 13, fontWeight: 700, color: C.warmGray, display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1 }}>−</button>
       <button onClick={(e) => { e.stopPropagation(); onSeatChange(table.id, 1); }} style={{ width: 20, height: 20, borderRadius: "50%", border: `1px solid ${C.lightGray}`, background: C.white, cursor: "pointer", fontSize: 13, fontWeight: 700, color: C.warmGray, display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1 }}>+</button>
     </div>
+    {/* Seats */}
     {sp.map((pos, i) => { const gid = table.seats[i]; const guest = gid ? gm[gid] : null; const isLinkedGuest = guest?.name.includes("'s Guest"); const gColor = guest ? (gc[guest.group] || C.warmGray) : C.lightGray; const conf = guest && conflicts.some(c => (c.a === guest.id || c.b === guest.id) && c.table === table.id);
       return (<div key={i} title={guest ? `${guest.name} (${guest.group}) — click to unseat` : "Empty seat"} onClick={() => guest && onRemove(guest.id)}
-        style={{ position: "absolute", left: pos.x - 17, top: pos.y - 17, width: 34, height: 34, borderRadius: "50%", background: guest ? (conf ? `${C.error}22` : `${gColor}30`) : `${C.white}50`, border: `${guest ? 2 : 1.5}px ${guest ? (isLinkedGuest ? "dashed" : "solid") : "dashed"} ${guest ? (conf ? C.error : gColor) : `${C.lightGray}70`}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: guest ? "pointer" : "default", zIndex: 2, fontSize: 10.5, fontFamily: "inherit", color: guest ? C.charcoal : "transparent", fontWeight: 500, letterSpacing: -0.3, boxShadow: guest ? `0 1px 4px ${gColor}20` : "none", transition: "all 0.15s" }}>
+        style={{ position: "absolute", left: pos.x - 17, top: pos.y - 17, width: 34, height: 34, borderRadius: "50%", background: guest ? (conf ? `${C.error}22` : `${gColor}30`) : `${C.cream}`, border: `${guest ? 2 : 1.5}px ${guest ? (isLinkedGuest ? "dashed" : "solid") : "dashed"} ${guest ? (conf ? C.error : gColor) : "#C8C0B6"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: guest ? "pointer" : "default", zIndex: 2, fontSize: 10.5, fontFamily: "inherit", color: guest ? C.charcoal : "transparent", fontWeight: 500, letterSpacing: -0.3, boxShadow: guest ? `0 1px 4px ${gColor}20` : "0 1px 3px rgba(0,0,0,0.04)", transition: "all 0.15s" }}>
         {guest ? (isLinkedGuest ? guest.name.split("'s")[0].slice(0, 3) + "+" : guest.name.split(" ")[0].slice(0, 5)) : ""}
       </div>); })}
   </div>);
 }
 
 // ── Mobile Table Card (for list view tap-to-place) ──
-function MobileTableCard({ table, gm, gc, conflicts, selectedGuest, onPlaceHere, onUnseat, onSeatChange, onRename }) {
+function MobileTableCard({ table, gm, gc, conflicts, selectedGuest, onPlaceHere, onUnseat, onSeatChange, onRename, unseatedGuests, onAddGuest }) {
   const seated = table.seats.filter(Boolean).map(sid => gm[sid]).filter(Boolean);
   const empty = table.seatCount - seated.length;
   const hasSelection = !!selectedGuest;
   const [editing, setEditing] = useState(false);
   const [nv, setNv] = useState(table.name);
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState("");
+
+  const filteredUnseated = (unseatedGuests || []).filter(g => !pickerSearch || g.name.toLowerCase().includes(pickerSearch.toLowerCase()));
 
   return (
     <div style={{ padding: "12px 14px", border: `1.5px solid ${hasSelection && empty > 0 ? C.sage : C.lightGray}`, borderRadius: 12, marginBottom: 8, background: C.white, transition: "border-color 0.2s" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: seated.length ? 8 : 0 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: seated.length || showPicker ? 8 : 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {editing ? (
             <input autoFocus value={nv} onChange={e => setNv(e.target.value)}
@@ -538,14 +548,19 @@ function MobileTableCard({ table, gm, gc, conflicts, selectedGuest, onPlaceHere,
             <button onClick={() => onSeatChange(table.id, 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: `1px solid ${C.lightGray}`, background: C.white, cursor: "pointer", fontSize: 14, fontWeight: 700, color: C.warmGray, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>+</button>
           </div>
         </div>
-        {hasSelection && empty > 0 && (
-          <button onClick={() => onPlaceHere(table.id)} style={{ padding: "6px 14px", border: "none", borderRadius: 8, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, color: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", minHeight: 36 }}>
-            Seat here
-          </button>
-        )}
+        <div style={{ display: "flex", gap: 4 }}>
+          {hasSelection && empty > 0 && (
+            <button onClick={() => onPlaceHere(table.id)} style={{ padding: "6px 14px", border: "none", borderRadius: 8, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, color: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer", minHeight: 36 }}>
+              Seat here
+            </button>
+          )}
+          {empty > 0 && !hasSelection && (
+            <button onClick={() => { setShowPicker(p => !p); setPickerSearch(""); }} style={{ padding: "6px 10px", border: `1.5px solid ${showPicker ? C.sage : C.lightGray}`, borderRadius: 8, background: showPicker ? `${C.sage}10` : C.white, fontFamily: "inherit", fontSize: 12, fontWeight: 600, color: showPicker ? C.darkSage : C.warmGray, cursor: "pointer", minHeight: 36 }}>+ Add</button>
+          )}
+        </div>
       </div>
       {seated.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: showPicker ? 8 : 0 }}>
           {seated.map(g => {
             const color = gc[g.group] || C.warmGray;
             const isLinked = g.name.includes("'s Guest");
@@ -558,38 +573,91 @@ function MobileTableCard({ table, gm, gc, conflicts, selectedGuest, onPlaceHere,
           })}
         </div>
       )}
-      {seated.length === 0 && !hasSelection && (
+      {seated.length === 0 && !hasSelection && !showPicker && (
         <div style={{ fontSize: 13, color: C.warmGray, fontStyle: "italic", padding: "2px 0" }}>Empty — {empty} seats available</div>
+      )}
+      {showPicker && (
+        <div style={{ padding: "8px 0 2px" }}>
+          <input autoFocus value={pickerSearch} onChange={e => setPickerSearch(e.target.value)} placeholder="Search unseated guests..." style={{ width: "100%", padding: "8px 10px", border: `1.5px solid ${C.sage}`, borderRadius: 8, fontFamily: "inherit", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 6 }} />
+          <div style={{ maxHeight: 180, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+            {filteredUnseated.length === 0 && <div style={{ fontSize: 13, color: C.warmGray, fontStyle: "italic", padding: 4 }}>{pickerSearch ? "No matches" : "Everyone is seated!"}</div>}
+            {filteredUnseated.map(g => {
+              const color = gc[g.group] || C.warmGray;
+              return (
+                <button key={g.id} onClick={() => { onAddGuest(g.id, table.id); setShowPicker(false); setPickerSearch(""); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 10px", border: `1px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 14, color: C.charcoal, cursor: "pointer", textAlign: "left", minHeight: 40 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                  <span style={{ flex: 1 }}>{g.name}</span>
+                  <span style={{ fontSize: 11, color: C.warmGray }}>{g.group}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-function DesktopTableCard({ table, gm, gc, conflicts, onSeatChange, onRename, onRemove }) {
+function DesktopTableCard({ table, gm, gc, conflicts, onSeatChange, onRename, onRemove, unseatedGuests, onAddGuest }) {
   const [editing, setEditing] = useState(false);
   const [nv, setNv] = useState(table.name);
+  const [expanded, setExpanded] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState("");
   const seated = table.seats.filter(Boolean);
+  const empty = table.seatCount - seated.length;
+  const filteredUnseated = (unseatedGuests || []).filter(g => !pickerSearch || g.name.toLowerCase().includes(pickerSearch.toLowerCase()));
+
   return (
-    <div style={{ padding: "10px 12px", border: `1px solid ${C.lightGray}`, borderRadius: 9, marginBottom: 6, background: C.white }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: seated.length ? 6 : 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+    <div style={{ padding: "8px 12px", border: `1px solid ${C.lightGray}`, borderRadius: 9, marginBottom: 4, background: C.white }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 0, cursor: "pointer" }} onClick={() => !editing && setExpanded(p => !p)}>
+          <span style={{ fontSize: 10, color: C.warmGray, opacity: 0.5, transition: "transform 0.2s", transform: expanded ? "rotate(0deg)" : "rotate(-90deg)", display: "inline-block" }}>▼</span>
           {editing ? (
             <input autoFocus value={nv} onChange={e => setNv(e.target.value)}
               onBlur={() => { setEditing(false); onRename(table.id, nv); }}
               onKeyDown={e => { if (e.key === "Enter") { setEditing(false); onRename(table.id, nv); } }}
-              style={{ fontWeight: 600, fontSize: 14.5, border: `1px solid ${C.lightGray}`, borderRadius: 6, padding: "2px 6px", fontFamily: "inherit", outline: "none", width: 120 }} />
+              onClick={e => e.stopPropagation()}
+              style={{ fontWeight: 600, fontSize: 14, border: `1px solid ${C.lightGray}`, borderRadius: 6, padding: "2px 6px", fontFamily: "inherit", outline: "none", width: 110 }} />
           ) : (
-            <span onClick={() => { setNv(table.name); setEditing(true); }} title="Click to rename" style={{ fontWeight: 600, fontSize: 14.5, cursor: "pointer", borderBottom: `1px dashed ${C.lightGray}` }}>{table.name}</span>
+            <span onDoubleClick={(e) => { e.stopPropagation(); setNv(table.name); setEditing(true); }} style={{ fontWeight: 600, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{table.name}</span>
           )}
-          <span style={{ fontSize: 12.5, color: C.warmGray }}>{table.shape === "rect" ? "▬" : "⬤"} {seated.length}/{table.seatCount}</span>
-          <div style={{ display: "flex", gap: 2 }}>
+          <span style={{ fontSize: 12, color: seated.length === table.seatCount ? C.darkSage : C.warmGray, fontWeight: seated.length === table.seatCount ? 600 : 400, flexShrink: 0 }}>{seated.length}/{table.seatCount}</span>
+        </div>
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          {empty > 0 && <button onClick={(e) => { e.stopPropagation(); setShowPicker(p => !p); setPickerSearch(""); if (!expanded) setExpanded(true); }} style={{ border: `1px solid ${showPicker ? C.sage : C.lightGray}`, borderRadius: 6, background: showPicker ? `${C.sage}10` : "transparent", padding: "2px 8px", fontFamily: "inherit", fontSize: 11, fontWeight: 600, color: showPicker ? C.darkSage : C.warmGray, cursor: "pointer" }}>+ Add</button>}
+          <button onClick={() => onRemove(table.id)} style={{ border: "none", background: "none", color: C.rose, cursor: "pointer", fontSize: 12, fontWeight: 500, flexShrink: 0, opacity: 0.6 }}>Remove</button>
+        </div>
+      </div>
+      {expanded && (<div style={{ marginTop: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: seated.length || showPicker ? 6 : 0 }}>
+          <span style={{ fontSize: 11.5, color: C.warmGray }}>{table.shape === "rect" ? "▬ Rect" : "⬤ Round"}</span>
+          <div style={{ display: "flex", gap: 2, marginLeft: 4 }}>
             <button onClick={() => onSeatChange(table.id, -1)} style={{ width: 20, height: 20, borderRadius: "50%", border: `1px solid ${C.lightGray}`, background: C.white, cursor: "pointer", fontSize: 13, fontWeight: 700, color: C.warmGray, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>−</button>
             <button onClick={() => onSeatChange(table.id, 1)} style={{ width: 20, height: 20, borderRadius: "50%", border: `1px solid ${C.lightGray}`, background: C.white, cursor: "pointer", fontSize: 13, fontWeight: 700, color: C.warmGray, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>+</button>
           </div>
         </div>
-        <button onClick={() => onRemove(table.id)} style={{ border: "none", background: "none", color: C.rose, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Remove</button>
-      </div>
-      {seated.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{seated.map(sid => { const g = gm[sid]; const color = g ? (gc[g.group] || C.warmGray) : C.lightGray; return g ? <span key={sid} style={{ fontSize: 12, padding: "3px 8px", borderRadius: 7, background: `${color}20`, border: `1px ${g.name.includes("'s Guest") ? "dashed" : "solid"} ${color}40`, fontStyle: g.name.includes("'s Guest") ? "italic" : "normal" }}>{g.name}</span> : null; })}</div>}
+        {seated.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginBottom: showPicker ? 6 : 0 }}>{seated.map(sid => { const g = gm[sid]; const color = g ? (gc[g.group] || C.warmGray) : C.lightGray; return g ? <span key={sid} style={{ fontSize: 12, padding: "3px 8px", borderRadius: 7, background: `${color}20`, border: `1px ${g.name.includes("'s Guest") ? "dashed" : "solid"} ${color}40`, fontStyle: g.name.includes("'s Guest") ? "italic" : "normal" }}>{g.name}</span> : null; })}</div>}
+        {seated.length === 0 && !showPicker && <div style={{ fontSize: 12, color: C.warmGray, fontStyle: "italic" }}>No guests seated</div>}
+        {showPicker && (
+          <div style={{ padding: "4px 0" }}>
+            <input autoFocus value={pickerSearch} onChange={e => setPickerSearch(e.target.value)} placeholder="Search unseated guests..." style={{ width: "100%", padding: "6px 8px", border: `1.5px solid ${C.sage}`, borderRadius: 7, fontFamily: "inherit", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 4 }} />
+            <div style={{ maxHeight: 150, overflowY: "auto", display: "flex", flexDirection: "column", gap: 1 }}>
+              {filteredUnseated.length === 0 && <div style={{ fontSize: 12, color: C.warmGray, fontStyle: "italic", padding: 3 }}>{pickerSearch ? "No matches" : "Everyone is seated!"}</div>}
+              {filteredUnseated.map(g => {
+                const color = gc[g.group] || C.warmGray;
+                return (
+                  <button key={g.id} onClick={() => { onAddGuest(g.id, table.id); setPickerSearch(""); }} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 8px", border: `1px solid ${C.lightGray}50`, borderRadius: 6, background: C.white, fontFamily: "inherit", fontSize: 13, color: C.charcoal, cursor: "pointer", textAlign: "left" }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                    <span style={{ flex: 1 }}>{g.name}</span>
+                    <span style={{ fontSize: 10, color: C.warmGray }}>{g.group}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>)}
     </div>
   );
 }
@@ -685,7 +753,6 @@ function FloorObject({ obj, onUpdate, onRemove, zoom }) {
       ) : (
         <span onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }} style={{ fontSize: 12, fontWeight: 600, color: C.charcoal, opacity: 0.7, textAlign: "center", lineHeight: 1.1, maxWidth: obj.w - 8, pointerEvents: "none" }}>{obj.label}</span>
       )}
-      {obj.w > 50 && obj.h > 35 && <span style={{ fontSize: 10.5, color: C.warmGray, opacity: 0.5, pointerEvents: "none", marginTop: 1 }}>{Math.round(obj.w)}×{Math.round(obj.h)}</span>}
       <button onClick={(e) => { e.stopPropagation(); onRemove(obj.id); }} style={{ position: "absolute", top: -8, right: -8, width: 22, height: 22, borderRadius: "50%", border: `1px solid ${C.lightGray}`, background: C.white, color: C.warmGray, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0, opacity: hovered ? 1 : 0.35, transition: "opacity 0.15s" }}>×</button>
       {handles.map(h => (
         <div key={h.key} onMouseDown={e => handleResize(e, h.key)} onTouchStart={e => handleTouchResize(e, h.key)} style={{ position: "absolute", top: h.top, bottom: h.bottom, left: h.left, right: h.right, marginLeft: h.ml || 0, marginTop: h.mt || 0, width: 12, height: 12, borderRadius: "50%", background: C.white, border: `1.5px solid ${obj.color}`, cursor: h.cursor, zIndex: 1, opacity: hovered ? 1 : 0.35, transition: "opacity 0.15s", touchAction: "none" }} />
@@ -698,12 +765,12 @@ function FloorObject({ obj, onUpdate, onRemove, zoom }) {
 
 function ConfirmModal({ title, message, onConfirm, onClose, danger, confirmLabel }) {
   return (<div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div style={{ background: C.white, borderRadius: 16, width: "min(400px, 90vw)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden" }}>
-      <div style={{ padding: "20px 22px 10px" }}><h3 style={{ margin: 0, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600 }}>{title}</h3></div>
-      <div style={{ padding: "6px 22px 20px", fontSize: 14.5, color: C.warmGray, lineHeight: 1.6 }}>{message}</div>
-      <div style={{ padding: "14px 22px", borderTop: `1px solid ${C.lightGray}`, display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <button onClick={onClose} style={{ padding: "8px 18px", border: `1.5px solid ${C.lightGray}`, borderRadius: 10, background: C.white, fontFamily: "inherit", fontSize: 14, color: C.warmGray, cursor: "pointer" }}>Cancel</button>
-        <button onClick={onConfirm} style={{ padding: "8px 22px", border: "none", borderRadius: 10, background: danger ? `linear-gradient(135deg, ${C.rose}, ${C.deepRose})` : `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, fontFamily: "inherit", fontSize: 14, fontWeight: 600, color: C.white, cursor: "pointer" }}>{confirmLabel || (danger ? "Yes, do it" : "Continue")}</button>
+    <div style={{ background: C.white, borderRadius: 16, width: "min(480px, 92vw)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden" }}>
+      <div style={{ padding: "24px 26px 12px" }}><h3 style={{ margin: 0, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600 }}>{title}</h3></div>
+      <div style={{ padding: "6px 26px 22px", fontSize: 15, color: C.warmGray, lineHeight: 1.65 }}>{message}</div>
+      <div style={{ padding: "16px 26px", borderTop: `1px solid ${C.lightGray}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
+        <button onClick={onClose} style={{ padding: "10px 22px", border: `1.5px solid ${C.lightGray}`, borderRadius: 10, background: C.white, fontFamily: "inherit", fontSize: 15, color: C.warmGray, cursor: "pointer" }}>Cancel</button>
+        <button onClick={onConfirm} style={{ padding: "10px 26px", border: "none", borderRadius: 10, background: danger ? `linear-gradient(135deg, ${C.rose}, ${C.deepRose})` : `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, fontFamily: "inherit", fontSize: 15, fontWeight: 600, color: C.white, cursor: "pointer" }}>{confirmLabel || (danger ? "Yes, do it" : "Continue")}</button>
       </div>
     </div>
   </div>);
@@ -722,7 +789,7 @@ function GuestEditModal({ guest, gm, gc, groups, onClose, onSave, onRemove, isMo
   };
 
   return (<div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div style={{ background: C.white, borderRadius: 16, width: "min(400px, 95vw)", maxHeight: "80vh", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", display: "flex", flexDirection: "column" }}>
+    <div style={{ background: C.white, borderRadius: 16, width: "min(480px, 95vw)", maxHeight: "80vh", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${C.lightGray}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h3 style={{ margin: 0, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600 }}>Edit Guest</h3>
         <button onClick={onClose} style={{ border: "none", background: "none", fontSize: 18, cursor: "pointer", color: C.warmGray }}>×</button>
@@ -851,7 +918,7 @@ function BulkImportModal({ onClose, onImport, onImportCSV, groups, gc }) {
   };
 
   return (<div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div style={{ background: C.white, borderRadius: 16, width: "min(520px, 95vw)", maxHeight: "85vh", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", display: "flex", flexDirection: "column" }}>
+    <div style={{ background: C.white, borderRadius: 16, width: "min(600px, 95vw)", maxHeight: "85vh", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${C.lightGray}` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><h3 style={{ margin: 0, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600 }}>Import Guests</h3><button onClick={onClose} style={{ border: "none", background: "none", fontSize: 18, cursor: "pointer", color: C.warmGray }}>×</button></div>
         <div style={{ display: "flex", gap: 4, marginTop: 10 }}>
@@ -952,7 +1019,7 @@ function BulkImportModal({ onClose, onImport, onImportCSV, groups, gc }) {
 function AddTableModal({ onClose, onAdd }) {
   const [name, setName] = useState(""); const [seats, setSeats] = useState(8); const [shape, setShape] = useState("round");
   return (<div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div style={{ background: C.white, borderRadius: 16, width: "min(380px, 90vw)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden" }}>
+    <div style={{ background: C.white, borderRadius: 16, width: "min(460px, 92vw)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden" }}>
       <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${C.lightGray}` }}><h3 style={{ margin: 0, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600 }}>Add Table</h3></div>
       <div style={{ padding: "16px 22px" }}>
         <label style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 1, color: C.warmGray, fontWeight: 600, display: "block", marginBottom: 4 }}>Name</label>
@@ -1053,7 +1120,7 @@ body{font-family:'Georgia',serif;padding:48px 44px 60px;color:#2D2D2D;background
     w.document.write(html); w.document.close(); setTimeout(() => w.print(), 300);
   };
   return (<div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div style={{ background: C.white, borderRadius: 16, width: "min(520px, 95vw)", maxHeight: "85vh", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", display: "flex", flexDirection: "column" }}>
+    <div style={{ background: C.white, borderRadius: 16, width: "min(600px, 95vw)", maxHeight: "85vh", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${C.lightGray}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}><h3 style={{ margin: 0, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600 }}>Export Your Seating Chart</h3><button onClick={onClose} style={{ border: "none", background: "none", fontSize: 18, cursor: "pointer", color: C.warmGray }}>×</button></div>
       <div style={{ padding: "10px 22px 6px", fontSize: 13.5, color: C.warmGray, lineHeight: 1.6 }}>Here's a preview of your seating assignments. You can copy as text (great for pasting into emails) or print a beautiful formatted version to hand to your venue.</div>
       <div style={{ flex: 1, overflowY: "auto", padding: "14px 22px" }}>
@@ -1094,7 +1161,7 @@ function HelpModal({ onClose }) {
     { id: "tips", label: "Tips & Shortcuts" },
   ];
   return (<div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div style={{ background: C.white, borderRadius: 16, width: "min(560px, 95vw)", maxHeight: "85vh", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", display: "flex", flexDirection: "column" }}>
+    <div style={{ background: C.white, borderRadius: 16, width: "min(640px, 95vw)", maxHeight: "85vh", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "18px 22px 14px", borderBottom: `1px solid ${C.lightGray}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h3 style={{ margin: 0, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600 }}>🪑 How to Use WhereDoTheySit</h3>
         <button onClick={onClose} style={{ border: "none", background: "none", fontSize: 18, cursor: "pointer", color: C.warmGray }}>×</button>
@@ -1689,7 +1756,7 @@ export default function App() {
           {isMobile && selectedForPlacement && (
             <div style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 1.5, color: C.sage, marginBottom: 6, fontWeight: 700 }}>Choose a table</div>
-              {tables.map(t => <MobileTableCard key={t.id} table={t} gm={gm} gc={gc} conflicts={conflicts} selectedGuest={selectedForPlacement} onPlaceHere={(tid) => placeGuest(selectedForPlacement, tid)} onUnseat={unseat} onSeatChange={changeSeatCount} onRename={renameTable} />)}
+              {tables.map(t => <MobileTableCard key={t.id} table={t} gm={gm} gc={gc} conflicts={conflicts} selectedGuest={selectedForPlacement} onPlaceHere={(tid) => placeGuest(selectedForPlacement, tid)} onUnseat={unseat} onSeatChange={changeSeatCount} onRename={renameTable} unseatedGuests={unseated} onAddGuest={placeGuest} />)}
             </div>
           )}
 
@@ -1729,8 +1796,8 @@ export default function App() {
         {tab === "tables" && (<div>
           <button onClick={() => setShowAddTable(true)} style={{ width: "100%", padding: "9px 0", border: `1.5px dashed ${C.sage}`, borderRadius: 8, background: `${C.sage}08`, fontFamily: "inherit", fontSize: 14, fontWeight: 600, color: C.darkSage, cursor: "pointer", marginBottom: 12, minHeight: isMobile ? 48 : "auto" }}>+ Add Table</button>
           {tables.map(t => {
-            if (isMobile) return <MobileTableCard key={t.id} table={t} gm={gm} gc={gc} conflicts={conflicts} selectedGuest={selectedForPlacement} onPlaceHere={(tid) => placeGuest(selectedForPlacement, tid)} onUnseat={unseat} onSeatChange={changeSeatCount} onRename={renameTable} />;
-            return <DesktopTableCard key={t.id} table={t} gm={gm} gc={gc} conflicts={conflicts} onSeatChange={changeSeatCount} onRename={renameTable} onRemove={(id) => setConfirmAction({ title: `Remove ${t.name}?`, message: `This will unseat ${t.seats.filter(Boolean).length} guest${t.seats.filter(Boolean).length !== 1 ? "s" : ""} and remove the table. You can undo with Ctrl+Z.`, danger: true, onConfirm: () => { removeTable(id); setConfirmAction(null); flash(`Removed ${t.name}`); }, onClose: () => setConfirmAction(null) })} />;
+            if (isMobile) return <MobileTableCard key={t.id} table={t} gm={gm} gc={gc} conflicts={conflicts} selectedGuest={selectedForPlacement} onPlaceHere={(tid) => placeGuest(selectedForPlacement, tid)} onUnseat={unseat} onSeatChange={changeSeatCount} onRename={renameTable} unseatedGuests={unseated} onAddGuest={placeGuest} />;
+            return <DesktopTableCard key={t.id} table={t} gm={gm} gc={gc} conflicts={conflicts} onSeatChange={changeSeatCount} onRename={renameTable} unseatedGuests={unseated} onAddGuest={placeGuest} onRemove={(id) => setConfirmAction({ title: `Remove ${t.name}?`, message: `This will unseat ${t.seats.filter(Boolean).length} guest${t.seats.filter(Boolean).length !== 1 ? "s" : ""} and remove the table. You can undo with Ctrl+Z.`, danger: true, onConfirm: () => { removeTable(id); setConfirmAction(null); flash(`Removed ${t.name}`); }, onClose: () => setConfirmAction(null) })} />;
           })}
         </div>)}
 
@@ -1876,26 +1943,26 @@ export default function App() {
       <input ref={fileInputRef} type="file" accept=".json" onChange={loadState} style={{ display: "none" }} />
 
       {/* ── Header ── */}
-      <div style={{ padding: isMobile ? "8px 12px" : "10px 20px", borderBottom: `1px solid ${C.lightGray}`, display: "flex", alignItems: "center", justifyContent: "space-between", background: `${C.white}90`, backdropFilter: "blur(10px)", gap: 8 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10, minWidth: 0, flex: 1 }}>
-          <span style={{ fontSize: isMobile ? 16 : 18, opacity: 0.8 }}>🪑</span>
-          <div style={{ minWidth: 0, flex: 1, maxWidth: isMobile ? "auto" : 340 }}>
+      <div style={{ padding: isMobile ? "8px 12px" : "14px 24px", borderBottom: `1px solid ${C.lightGray}`, display: "flex", alignItems: "center", justifyContent: "space-between", background: `${C.white}90`, backdropFilter: "blur(10px)", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 12, minWidth: 0, flex: 1 }}>
+          <span style={{ fontSize: isMobile ? 18 : 22, opacity: 0.8 }}>🪑</span>
+          <div style={{ minWidth: 0, flex: 1, maxWidth: isMobile ? "auto" : 400 }}>
             {eventName ? (
-              <input value={eventName} onChange={e => setEventName(e.target.value)} style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: isMobile ? 16 : 19, fontWeight: 600, color: C.charcoal, border: "none", background: "transparent", outline: "none", padding: 0, width: "100%", lineHeight: 1.3 }} />
+              <input value={eventName} onChange={e => setEventName(e.target.value)} style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: isMobile ? 18 : 24, fontWeight: 700, color: C.charcoal, border: "none", background: "transparent", outline: "none", padding: 0, width: "100%", lineHeight: 1.3 }} />
             ) : (
-              <input value={eventName} onChange={e => setEventName(e.target.value)} placeholder={isMobile ? "Name your event…" : "Click to name your event…"} style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: isMobile ? 15 : 17, fontWeight: 500, color: C.warmGray, border: "none", background: "transparent", outline: "none", padding: 0, width: "100%", lineHeight: 1.3, opacity: 0.5 }} />
+              <input value={eventName} onChange={e => setEventName(e.target.value)} placeholder={isMobile ? "Name your event…" : "Click to name your event…"} style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: isMobile ? 17 : 22, fontWeight: 500, color: C.warmGray, border: "none", background: "transparent", outline: "none", padding: 0, width: "100%", lineHeight: 1.3, opacity: 0.5 }} />
             )}
-            {!isMobile && <div style={{ fontSize: 11, color: C.warmGray, opacity: 0.5, marginTop: 1 }}>WhereDoTheySit.com</div>}
+            {!isMobile && <div style={{ fontSize: 12, color: C.warmGray, opacity: 0.5, marginTop: 2 }}>WhereDoTheySit.com</div>}
           </div>
         </div>
-        <div style={{ display: "flex", gap: isMobile ? 4 : 6, alignItems: "center", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: isMobile ? 4 : 8, alignItems: "center", flexShrink: 0 }}>
           {/* Capacity summary — compact pill */}
-          {!isMobile && <div style={{ fontSize: 12, color: C.warmGray, display: "flex", gap: 8, alignItems: "center", marginRight: 4, padding: "4px 10px", background: C.cream, borderRadius: 8, border: `1px solid ${C.lightGray}50` }}>
+          {!isMobile && <div style={{ fontSize: 13, color: C.warmGray, display: "flex", gap: 10, alignItems: "center", marginRight: 6, padding: "6px 14px", background: C.cream, borderRadius: 10, border: `1px solid ${C.lightGray}50` }}>
             <span style={{ fontWeight: 600, color: C.charcoal }}>{guests.length}</span> <span style={{ opacity: 0.6 }}>guests</span>
-            <span style={{ width: 1, height: 12, background: C.lightGray }} />
+            <span style={{ width: 1, height: 14, background: C.lightGray }} />
             <span style={{ color: C.darkSage, fontWeight: 500 }}>{totalSeated} seated</span>
-            {unseated.length > 0 && <><span style={{ width: 1, height: 12, background: C.lightGray }} /><span style={{ color: openSeats < unseated.length ? C.rose : C.warmGray, fontWeight: openSeats < unseated.length ? 600 : 400 }}>{unseated.length} left</span></>}
-            {conflicts.length > 0 && <><span style={{ width: 1, height: 12, background: C.lightGray }} /><span style={{ color: C.error, fontWeight: 600 }}>⚠ {conflicts.length}</span></>}
+            {unseated.length > 0 && <><span style={{ width: 1, height: 14, background: C.lightGray }} /><span style={{ color: openSeats < unseated.length ? C.rose : C.warmGray, fontWeight: openSeats < unseated.length ? 600 : 400 }}>{unseated.length} left</span></>}
+            {conflicts.length > 0 && <><span style={{ width: 1, height: 14, background: C.lightGray }} /><span style={{ color: C.error, fontWeight: 600 }}>⚠ {conflicts.length}</span></>}
           </div>}
           {isMobile && <div style={{ fontSize: 11, color: C.warmGray, display: "flex", gap: 6, alignItems: "center", padding: "3px 8px", background: C.cream, borderRadius: 6, border: `1px solid ${C.lightGray}50` }}>
             <span style={{ fontWeight: 600, color: C.charcoal }}>{guests.length}</span>
@@ -1904,8 +1971,8 @@ export default function App() {
             {conflicts.length > 0 && <span style={{ color: C.error }}>⚠{conflicts.length}</span>}
           </div>}
           <div style={{ display: "flex", gap: isMobile ? 3 : 4 }}>
-            <button onClick={undo} disabled={historyIndex <= 0} title="Undo" style={{ padding: isMobile ? "6px 8px" : "4px 8px", border: `1.5px solid ${C.lightGray}`, borderRadius: 7, background: C.white, fontFamily: "inherit", fontSize: 13, color: historyIndex <= 0 ? C.lightGray : C.warmGray, cursor: historyIndex <= 0 ? "default" : "pointer", fontWeight: 600, minHeight: isMobile ? 36 : "auto" }}>↩</button>
-            <button onClick={redo} disabled={historyIndex >= history.length - 1} title="Redo" style={{ padding: isMobile ? "6px 8px" : "4px 8px", border: `1.5px solid ${C.lightGray}`, borderRadius: 7, background: C.white, fontFamily: "inherit", fontSize: 13, color: historyIndex >= history.length - 1 ? C.lightGray : C.warmGray, cursor: historyIndex >= history.length - 1 ? "default" : "pointer", fontWeight: 600, minHeight: isMobile ? 36 : "auto" }}>↪</button>
+            <button onClick={undo} disabled={historyIndex <= 0} title="Undo" style={{ padding: isMobile ? "6px 8px" : "6px 10px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 14, color: historyIndex <= 0 ? C.lightGray : C.warmGray, cursor: historyIndex <= 0 ? "default" : "pointer", fontWeight: 600, minHeight: isMobile ? 36 : "auto" }}>↩</button>
+            <button onClick={redo} disabled={historyIndex >= history.length - 1} title="Redo" style={{ padding: isMobile ? "6px 8px" : "6px 10px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 14, color: historyIndex >= history.length - 1 ? C.lightGray : C.warmGray, cursor: historyIndex >= history.length - 1 ? "default" : "pointer", fontWeight: 600, minHeight: isMobile ? 36 : "auto" }}>↪</button>
             {isMobile ? (
               /* Mobile: hamburger menu for save/load/export/help */
               <div style={{ position: "relative" }}>
@@ -1928,11 +1995,11 @@ export default function App() {
             ) : (
               /* Desktop: full button row */
               <>
-                <button onClick={() => setConfirmAction({ title: "Save Your Plan", message: "This will download a small backup file to your computer. You can use it later to restore everything exactly as it is — guests, tables, and layout. The file is tiny and safe to email or share.", confirmLabel: "💾 Download File", onConfirm: () => { saveState(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) })} title="Save layout" style={{ padding: "4px 10px", border: `1.5px solid ${C.lightGray}`, borderRadius: 7, background: C.white, fontFamily: "inherit", fontSize: 12, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>💾 Save</button>
-                <button onClick={() => setConfirmAction({ title: "Load a Saved Plan", message: "Choose a file you previously saved from WhereDoTheySit. This will replace your current guest list, tables, and layout with whatever is in the file. (Your current work is auto-saved, so you can undo this by refreshing the page.)", confirmLabel: "📂 Choose File", onConfirm: () => { fileInputRef.current?.click(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) })} title="Load layout" style={{ padding: "4px 10px", border: `1.5px solid ${C.lightGray}`, borderRadius: 7, background: C.white, fontFamily: "inherit", fontSize: 12, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>📂 Load</button>
-                <button onClick={() => setShowExport(true)} style={{ padding: "4px 10px", border: `1.5px solid ${C.lightGray}`, borderRadius: 7, background: C.white, fontFamily: "inherit", fontSize: 12, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>📤 Export</button>
-                <button onClick={() => setShowHelp(true)} style={{ padding: "4px 10px", border: `1.5px solid ${C.lightGray}`, borderRadius: 7, background: C.white, fontFamily: "inherit", fontSize: 12, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>? Help</button>
-                <a href="https://ko-fi.com/deptappliedmagic" target="_blank" rel="noopener noreferrer" style={{ padding: "4px 10px", border: `1.5px solid ${C.gold}40`, borderRadius: 7, background: `${C.gold}08`, fontFamily: "inherit", fontSize: 12, fontWeight: 600, color: C.gold, textDecoration: "none", display: "flex", alignItems: "center" }}>☕ Support</a>
+                <button onClick={() => setConfirmAction({ title: "Save Your Plan", message: "This will download a small backup file to your computer. You can use it later to restore everything exactly as it is — guests, tables, and layout. The file is tiny and safe to email or share.", confirmLabel: "💾 Download File", onConfirm: () => { saveState(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) })} title="Save layout" style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>💾 Save</button>
+                <button onClick={() => setConfirmAction({ title: "Load a Saved Plan", message: "Choose a file you previously saved from WhereDoTheySit. This will replace your current guest list, tables, and layout with whatever is in the file. (Your current work is auto-saved, so you can undo this by refreshing the page.)", confirmLabel: "📂 Choose File", onConfirm: () => { fileInputRef.current?.click(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) })} title="Load layout" style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>📂 Load</button>
+                <button onClick={() => setShowExport(true)} style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>📤 Export</button>
+                <button onClick={() => setShowHelp(true)} style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>? Help</button>
+                <a href="https://ko-fi.com/deptappliedmagic" target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", border: `1.5px solid ${C.gold}40`, borderRadius: 8, background: `${C.gold}08`, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.gold, textDecoration: "none", display: "flex", alignItems: "center" }}>☕ Support</a>
               </>
             )}
           </div>
