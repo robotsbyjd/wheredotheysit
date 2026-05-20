@@ -31,6 +31,8 @@ const FLOOR_PRESETS = [
 
 const HISTORY_LIMIT = 40;
 const AUTOSAVE_KEY = "wheredotheysit_autosave";
+const CUSTOM_EMAIL = "robotsbyjd@gmail.com";
+const CUSTOM_MAILTO = `mailto:${CUSTOM_EMAIL}?subject=${encodeURIComponent("Custom WhereDoTheySit venue planner")}`;
 
 // ── Mobile detection hook ──
 function useIsMobile(breakpoint = 768) {
@@ -300,7 +302,7 @@ function buildWedding() {
   return {
     guests: all,
     tables: [
-      { id: "t0", name: "Sweetheart Table", x: 470, y: 20, seatCount: 2, shape: "rect", seats: Array(2).fill(null) },
+      { id: "t0", name: "Sweetheart Table", x: 470, y: 20, seatCount: 2, shape: "rect", seats: ["b0", "b1"] },
       { id: "t1", name: "Table 1", x: 40, y: 100, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
       { id: "t2", name: "Table 2", x: 40, y: 320, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
       { id: "t3", name: "Table 3", x: 40, y: 540, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
@@ -317,9 +319,9 @@ function buildWedding() {
     floorObjects: [
       { id: "fo1", label: "Dance Floor", icon: "💃", w: 200, h: 160, x: 380, y: 340, color: "#D4C5F9" },
       { id: "fo2", label: "DJ Booth", icon: "🎧", w: 90, h: 55, x: 435, y: 270, color: "#C5DCF9" },
-      { id: "fo3", label: "Bar", icon: "🍸", w: 130, h: 50, x: 680, y: 520, color: "#F9D5C5" },
-      { id: "fo4", label: "Cake Table", icon: "🎂", w: 70, h: 70, x: 280, y: 520, color: "#F9F0C5" },
-      { id: "fo5", label: "Photo Booth", icon: "📸", w: 80, h: 80, x: 680, y: 340, color: "#F9C5E8" },
+      { id: "fo3", label: "Bar", icon: "🍸", w: 130, h: 50, x: 1080, y: 450, color: "#F9D5C5" },
+      { id: "fo4", label: "Cake Table", icon: "🎂", w: 70, h: 70, x: 1110, y: 660, color: "#F9F0C5" },
+      { id: "fo5", label: "Photo Booth", icon: "📸", w: 80, h: 80, x: 1105, y: 250, color: "#F9C5E8" },
     ],
     groupColors: { "Bride's Side": "#E07898", "Groom's Side": "#5A9FD4", "Friends": "#6BBF70", "Colleagues": "#D4A24E", "VIPs": "#9B7ED4", "Sweetheart Table": "#E05A6B" },
     eventName: "Anna Marie & Remy's Wedding",
@@ -445,9 +447,15 @@ function assignGuests(guestList, tables, gm, groups, preserve = false) {
   const go = {}; groups.forEach((g, i) => go[g] = i);
   const cls = buildClusters(toPlace, gm);
   cls.sort((a, b) => { const ag = a[0].group, bg = b[0].group; if (ag !== bg) return (go[ag] || 99) - (go[bg] || 99); return b.length - a.length; });
+  const norm = (s = "") => s.trim().toLowerCase();
   cls.forEach(cl => {
     let best = null, bestSc = -Infinity;
-    nt.forEach(t => { const empty = t.seats.filter(s => s === null).length; if (empty < cl.length) return; let total = 0; cl.forEach(g => total += scoreT(t, g, gm)); total += t.seats.filter(Boolean).filter(sid => gm[sid]?.group === cl[0].group).length * (preserve ? 12 : 8); if (total > bestSc) { bestSc = total; best = t; } });
+    const preferred = nt.find(t => norm(t.name) === norm(cl[0].group) && t.seats.filter(s => s === null).length >= cl.length);
+    if (preferred) {
+      best = preferred;
+    } else {
+      nt.forEach(t => { const empty = t.seats.filter(s => s === null).length; if (empty < cl.length) return; let total = 0; cl.forEach(g => total += scoreT(t, g, gm)); total += t.seats.filter(Boolean).filter(sid => gm[sid]?.group === cl[0].group).length * (preserve ? 12 : 8); if (total > bestSc) { bestSc = total; best = t; } });
+    }
     if (best) { const ei = best.seats.map((s, i) => s === null ? i : -1).filter(i => i >= 0); let si = 0, found = false; for (let i = 0; i <= ei.length - cl.length; i++) { let ok = true; for (let j = 1; j < cl.length; j++) if (ei[i + j] - ei[i] !== j) { ok = false; break; } if (ok) { si = i; found = true; break; } } cl.forEach((g, ci) => { const idx = found ? ei[si + ci] : ei[ci]; if (idx !== undefined) best.seats[idx] = g.id; }); }
   });
   toPlace.filter(g => !nt.some(t => t.seats.includes(g.id))).forEach(g => { let best = null, bestSc = -Infinity; nt.forEach(t => { const s = scoreT(t, g, gm); if (s > bestSc) { bestSc = s; best = t; } }); if (best) { const i = best.seats.indexOf(null); if (i !== -1) best.seats[i] = g.id; } });
@@ -1040,7 +1048,7 @@ function AddTableModal({ onClose, onAdd }) {
   </div>);
 }
 
-function ExportModal({ tables, guests, gm, gc, onClose }) {
+function ExportModal({ tables, guests, gm, gc, eventName, conflicts, onClose }) {
   const unseated = guests.filter(g => !tables.some(t => t.seats.includes(g.id)));
   const copyText = () => { let txt = (eventName ? eventName.toUpperCase() + "\n" : "") + "TABLE ASSIGNMENTS\n" + "=".repeat(40) + "\n\n"; tables.forEach(t => { const gs = t.seats.filter(Boolean).map(sid => gm[sid]).filter(Boolean); txt += `${t.name} (${t.shape === "rect" ? "Rect" : "Round"}, ${t.seatCount} seats)\n` + "-".repeat(30) + "\n"; if (!gs.length) txt += "  (empty)\n"; else gs.forEach((g, i) => { txt += `  ${i + 1}. ${g.name}  [${g.group}]\n`; }); txt += "\n"; }); if (unseated.length) { txt += "UNSEATED\n" + "-".repeat(30) + "\n"; unseated.forEach(g => { txt += `  - ${g.name}  [${g.group}]\n`; }); } navigator.clipboard?.writeText(txt); };
   const printView = () => {
@@ -1133,7 +1141,9 @@ body{font-family:'Georgia',serif;padding:48px 44px 60px;color:#2D2D2D;background
           <button onClick={printView} style={{ padding: "8px 22px", border: "none", borderRadius: 10, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, fontFamily: "inherit", fontSize: 14, fontWeight: 600, color: C.white, cursor: "pointer" }}>🖨️ Print / PDF</button>
         </div>
         <div style={{ textAlign: "center", fontSize: 12.5, color: C.warmGray, lineHeight: 1.6, padding: "6px 0 2px" }}>
-          If WhereDoTheySit helped plan your event, consider{" "}
+          Want this customized for your venue's real floorplan?{" "}
+          <a href={CUSTOM_MAILTO} style={{ color: C.darkSage, fontWeight: 700, textDecoration: "none" }}>Email {CUSTOM_EMAIL}</a>
+          {" "}· If this helped, consider{" "}
           <a href="https://ko-fi.com/deptappliedmagic" target="_blank" rel="noopener noreferrer" style={{ color: C.gold, fontWeight: 600, textDecoration: "none" }}>supporting us ☕</a>
         </div>
       </div>
@@ -1282,7 +1292,10 @@ function HelpModal({ onClose }) {
         </div>)}
       </div>
       <div style={{ padding: "12px 22px", borderTop: `1px solid ${C.lightGray}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <a href="https://ko-fi.com/deptappliedmagic" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: C.gold, textDecoration: "none", fontWeight: 600 }}>☕ Support this project</a>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <a href={CUSTOM_MAILTO} style={{ fontSize: 13, color: C.darkSage, textDecoration: "none", fontWeight: 700 }}>🏛 Custom venue planner</a>
+          <a href="https://ko-fi.com/deptappliedmagic" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: C.gold, textDecoration: "none", fontWeight: 600 }}>☕ Support this project</a>
+        </div>
         <button onClick={onClose} style={{ padding: "8px 20px", border: "none", borderRadius: 10, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, fontFamily: "inherit", fontSize: 14, fontWeight: 600, color: C.white, cursor: "pointer" }}>Got it!</button>
       </div>
     </div>
@@ -1935,7 +1948,7 @@ export default function App() {
       <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" />
       {showBulk && <BulkImportModal onClose={() => setShowBulk(false)} onImport={bulkImport} onImportCSV={csvImport} groups={groups} gc={gc} />}
       {showAddTable && <AddTableModal onClose={() => setShowAddTable(false)} onAdd={addTable} />}
-      {showExport && <ExportModal tables={tables} guests={guests} gm={gm} gc={gc} onClose={() => setShowExport(false)} />}
+      {showExport && <ExportModal tables={tables} guests={guests} gm={gm} gc={gc} eventName={eventName} conflicts={conflicts} onClose={() => setShowExport(false)} />}
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       {confirmAction && <ConfirmModal {...confirmAction} />}
       {showWelcome && <WelcomeModal isMobile={isMobile} onSelect={loadPreset} />}
@@ -1943,7 +1956,7 @@ export default function App() {
       <input ref={fileInputRef} type="file" accept=".json" onChange={loadState} style={{ display: "none" }} />
 
       {/* ── Header ── */}
-      <div style={{ padding: isMobile ? "8px 12px" : "14px 24px", borderBottom: `1px solid ${C.lightGray}`, display: "flex", alignItems: "center", justifyContent: "space-between", background: `${C.white}90`, backdropFilter: "blur(10px)", gap: 10 }}>
+      <div style={{ padding: isMobile ? "8px 12px" : "14px 24px", borderBottom: `1px solid ${C.lightGray}`, display: "flex", alignItems: "center", justifyContent: "space-between", background: `${C.white}90`, backdropFilter: "blur(10px)", gap: 10, position: "relative", zIndex: 160 }}>
         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 12, minWidth: 0, flex: 1 }}>
           <span style={{ fontSize: isMobile ? 18 : 22, opacity: 0.8 }}>🪑</span>
           <div style={{ minWidth: 0, flex: 1, maxWidth: isMobile ? "auto" : 400 }}>
@@ -1978,16 +1991,17 @@ export default function App() {
               <div style={{ position: "relative" }}>
                 <button onClick={() => setShowMobileMenu(p => !p)} style={{ padding: "6px 10px", border: `1.5px solid ${C.lightGray}`, borderRadius: 7, background: C.white, fontFamily: "inherit", fontSize: 14, color: C.warmGray, cursor: "pointer", minHeight: 36 }}>⋯</button>
                 {showMobileMenu && (
-                  <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 4, background: C.white, border: `1px solid ${C.lightGray}`, borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", zIndex: 50, minWidth: 160, overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 4, background: C.white, border: `1px solid ${C.lightGray}`, borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", zIndex: 200, minWidth: 180, overflow: "hidden" }}>
                     {[
                       { label: "💾 Save", action: () => { setShowMobileMenu(false); setConfirmAction({ title: "Save Your Plan", message: "This will download a small backup file to your device. You can use it later to restore everything exactly as it is.", confirmLabel: "💾 Download File", onConfirm: () => { saveState(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) }); } },
                       { label: "📂 Load", action: () => { setShowMobileMenu(false); setConfirmAction({ title: "Load a Saved Plan", message: "Choose a file you previously saved. This will replace your current guest list, tables, and layout with whatever is in the file.", confirmLabel: "📂 Choose File", onConfirm: () => { fileInputRef.current?.click(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) }); } },
                       { label: "📤 Export", action: () => { setShowExport(true); setShowMobileMenu(false); } },
                       { label: "? Help", action: () => { setShowHelp(true); setShowMobileMenu(false); } },
+                      { label: "🏛 Venue Version", action: () => { window.location.href = CUSTOM_MAILTO; setShowMobileMenu(false); } },
                       { label: "☕ Support", action: () => { window.open("https://ko-fi.com/deptappliedmagic", "_blank"); setShowMobileMenu(false); } },
                       { label: "🔄 Start Fresh", action: () => { setShowMobileMenu(false); setConfirmAction({ title: "Start Fresh?", message: "This will clear everything and let you choose a new starting point.", danger: true, onConfirm: () => { startFresh(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) }); } },
-                    ].map((item, i) => (
-                      <button key={i} onClick={item.action} style={{ width: "100%", padding: "12px 16px", border: "none", borderBottom: i < 5 ? `1px solid ${C.lightGray}30` : "none", background: "transparent", fontFamily: "inherit", fontSize: 14, color: item.label.includes("Start Fresh") ? C.rose : C.charcoal, cursor: "pointer", textAlign: "left" }}>{item.label}</button>
+                    ].map((item, i, arr) => (
+                      <button key={i} onClick={item.action} style={{ width: "100%", padding: "12px 16px", border: "none", borderBottom: i < arr.length - 1 ? `1px solid ${C.lightGray}30` : "none", background: "transparent", fontFamily: "inherit", fontSize: 14, color: item.label.includes("Start Fresh") ? C.rose : item.label.includes("Venue") ? C.darkSage : C.charcoal, cursor: "pointer", textAlign: "left", fontWeight: item.label.includes("Venue") ? 700 : 400 }}>{item.label}</button>
                     ))}
                   </div>
                 )}
@@ -1999,6 +2013,7 @@ export default function App() {
                 <button onClick={() => setConfirmAction({ title: "Load a Saved Plan", message: "Choose a file you previously saved from WhereDoTheySit. This will replace your current guest list, tables, and layout with whatever is in the file. (Your current work is auto-saved, so you can undo this by refreshing the page.)", confirmLabel: "📂 Choose File", onConfirm: () => { fileInputRef.current?.click(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) })} title="Load layout" style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>📂 Load</button>
                 <button onClick={() => setShowExport(true)} style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>📤 Export</button>
                 <button onClick={() => setShowHelp(true)} style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>? Help</button>
+                <a href={CUSTOM_MAILTO} style={{ padding: "6px 14px", border: `1.5px solid ${C.sage}40`, borderRadius: 8, background: `${C.sage}08`, fontFamily: "inherit", fontSize: 13, fontWeight: 700, color: C.darkSage, textDecoration: "none", display: "flex", alignItems: "center" }}>🏛 Venue Version</a>
                 <a href="https://ko-fi.com/deptappliedmagic" target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", border: `1.5px solid ${C.gold}40`, borderRadius: 8, background: `${C.gold}08`, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.gold, textDecoration: "none", display: "flex", alignItems: "center" }}>☕ Support</a>
               </>
             )}
@@ -2007,7 +2022,7 @@ export default function App() {
       </div>
 
       {/* Close mobile menu on tap outside */}
-      {showMobileMenu && <div onClick={() => setShowMobileMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />}
+      {showMobileMenu && <div onClick={() => setShowMobileMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 150 }} />}
 
       {/* Starter content banner */}
       {isStarterContent && (
@@ -2054,8 +2069,8 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <div style={{ height: 24, display: "flex", alignItems: "center", justifyContent: "center", borderTop: `1px solid ${C.lightGray}`, background: `${C.white}80`, flexShrink: 0 }}>
-        <span style={{ fontSize: 11.5, color: `${C.warmGray}90`, letterSpacing: 0.2 }}>This site uses basic analytics to understand usage. No personal data is stored. Copyright JD Ventures LLC.</span>
+      <div style={{ minHeight: 24, padding: isMobile ? "3px 8px" : 0, display: "flex", alignItems: "center", justifyContent: "center", borderTop: `1px solid ${C.lightGray}`, background: `${C.white}80`, flexShrink: 0, textAlign: "center" }}>
+        <span style={{ fontSize: isMobile ? 10.5 : 11.5, color: `${C.warmGray}90`, letterSpacing: 0.2, lineHeight: 1.35 }}>{isMobile ? "Basic analytics. No personal data stored." : "This site uses basic analytics to understand usage. No personal data is stored. Copyright JD Ventures LLC."}</span>
       </div>
 
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}*{box-sizing:border-box}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:${C.lightGray};border-radius:3px}`}</style>
