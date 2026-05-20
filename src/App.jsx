@@ -177,9 +177,9 @@ function buildBabyShower() {
 function buildWedding() {
   const all = []; const add = e => all.push(...e);
 
-  // ── Sweetheart Table (Bride & Groom) ──
-  const anna = makeGuest("Anna Marie", "Sweetheart Table", 0, { id: "b0" });
-  const remy = makeGuest("Remy LeBeau", "Sweetheart Table", 0, { id: "b1" });
+  // ── Couple / VIPs ──
+  const anna = makeGuest("Anna Marie", "VIPs", 0, { id: "b0" });
+  const remy = makeGuest("Remy LeBeau", "VIPs", 0, { id: "b1" });
   anna[0].constraints.keepWith.push("b1"); remy[0].constraints.keepWith.push("b0"); add(anna); add(remy);
 
   // ── Bride's Side (20 guests incl +1s) ──
@@ -302,7 +302,6 @@ function buildWedding() {
   return {
     guests: all,
     tables: [
-      { id: "t0", name: "Sweetheart Table", x: 470, y: 20, seatCount: 2, shape: "rect", seats: ["b0", "b1"] },
       { id: "t1", name: "Table 1", x: 40, y: 100, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
       { id: "t2", name: "Table 2", x: 40, y: 320, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
       { id: "t3", name: "Table 3", x: 40, y: 540, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
@@ -315,6 +314,7 @@ function buildWedding() {
       { id: "t10", name: "Table 10", x: 360, y: 740, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
       { id: "t11", name: "Table 11", x: 600, y: 740, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
       { id: "t12", name: "Table 12", x: 840, y: 740, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
+      { id: "t0", name: "Sweetheart Table", x: 470, y: 20, seatCount: 2, shape: "rect", seats: Array(2).fill(null) },
     ],
     floorObjects: [
       { id: "fo1", label: "Dance Floor", icon: "💃", w: 200, h: 160, x: 380, y: 340, color: "#D4C5F9" },
@@ -323,7 +323,7 @@ function buildWedding() {
       { id: "fo4", label: "Cake Table", icon: "🎂", w: 70, h: 70, x: 1110, y: 660, color: "#F9F0C5" },
       { id: "fo5", label: "Photo Booth", icon: "📸", w: 80, h: 80, x: 1105, y: 250, color: "#F9C5E8" },
     ],
-    groupColors: { "Bride's Side": "#E07898", "Groom's Side": "#5A9FD4", "Friends": "#6BBF70", "Colleagues": "#D4A24E", "VIPs": "#9B7ED4", "Sweetheart Table": "#E05A6B" },
+    groupColors: { "Bride's Side": "#E07898", "Groom's Side": "#5A9FD4", "Friends": "#6BBF70", "Colleagues": "#D4A24E", "VIPs": "#9B7ED4" },
     eventName: "Anna Marie & Remy's Wedding",
   };
 }
@@ -1715,6 +1715,29 @@ export default function App() {
   const handleGroupDrop = (e, grp) => { e.preventDefault(); const gid = e.dataTransfer.getData("guestId"); const dt = e.dataTransfer.getData("dragType"); if (gid && dt === "guest") changeGroup(gid, grp); };
   const activeGroups = groups.filter(grp => guests.some(g => g.group === grp));
 
+  const renderActionBar = () => (
+    <div style={{ padding: isMobile ? "10px 12px" : "10px 12px 9px", borderBottom: `1px solid ${C.lightGray}`, background: `${C.white}78`, display: "flex", flexDirection: "column", gap: 6 }}>
+      <button onClick={runAutoAssign} style={{ width: "100%", padding: isMobile ? "10px 0" : "9px 0", border: "none", borderRadius: 8, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, color: C.white, fontFamily: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: `0 2px 12px ${C.sage}35`, minHeight: isMobile ? 48 : "auto" }}>✨ Auto-Assign All</button>
+      <div style={{ display: "flex", gap: 6 }}>
+        {unseated.length > 0 && unseated.length < guests.length && (
+          <button onClick={runAutoComplete} style={{ flex: 1, padding: isMobile ? "8px 0" : "6px 0", border: `1.5px solid ${C.gold}`, borderRadius: 8, background: `${C.gold}10`, fontFamily: "inherit", fontSize: 12.5, fontWeight: 700, color: C.darkGold, cursor: "pointer", minHeight: isMobile ? 40 : "auto" }}>🧩 Seat Remaining ({unseated.length})</button>
+        )}
+        <button onClick={() => setConfirmAction({ title: "Clear Seats?", message: "Unseat everyone but keep guest list and tables?", onConfirm: () => { clearAllSeats(); setConfirmAction(null); flash("Seats cleared"); }, onClose: () => setConfirmAction(null) })} style={{ flex: 1, padding: isMobile ? "8px 0" : "6px 0", border: `1px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, color: C.warmGray, cursor: "pointer", minHeight: isMobile ? 40 : "auto" }}>Clear seats</button>
+        <button onClick={() => setConfirmAction({ title: "Start Fresh?", message: "This will clear everything and let you choose a new starting point — dinner party, baby shower, wedding, or blank room.", danger: true, onConfirm: () => { startFresh(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) })} style={{ flex: 1, padding: isMobile ? "8px 0" : "6px 0", border: `1px solid ${C.rose}30`, borderRadius: 8, background: `${C.rose}05`, fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, color: C.rose, cursor: "pointer", minHeight: isMobile ? 40 : "auto" }}>Start fresh</button>
+      </div>
+    </div>
+  );
+
+  const renderVenueCallout = () => (
+    <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.sage}25`, background: `linear-gradient(135deg, ${C.sage}10, ${C.gold}08)`, display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 700, color: C.charcoal, lineHeight: 1.25 }}>Want this for your venue?</div>
+      <div style={{ fontSize: 12.5, color: C.warmGray, lineHeight: 1.45 }}>
+        We can make a custom version with your venue's layout plans, rooms, and setup options.
+      </div>
+      <a href={CUSTOM_MAILTO} style={{ fontSize: 13, fontWeight: 700, color: C.darkSage, textDecoration: "none" }}>Email {CUSTOM_EMAIL} to talk options →</a>
+    </div>
+  );
+
   // ── Sidebar / Panel Content (shared between desktop sidebar and mobile list view) ──
   const renderPanel = () => (
     <>
@@ -1725,6 +1748,8 @@ export default function App() {
           <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: isMobile ? "11px 0" : "9px 0", border: "none", background: tab === t ? C.white : "transparent", borderBottom: tab === t ? `2px solid ${C.sage}` : "2px solid transparent", fontFamily: "inherit", fontSize: 14, fontWeight: tab === t ? 600 : 400, color: tab === t ? C.charcoal : C.warmGray, cursor: "pointer" }}>{tabLabels[t]}</button>
         ); })}
       </div>
+
+      {renderActionBar()}
 
       <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
         {tab === "guests" && (<div>
@@ -1890,15 +1915,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Actions panel */}
-      <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.lightGray}`, display: "flex", flexDirection: "column", gap: 5 }}>
-        <button onClick={runAutoAssign} style={{ width: "100%", padding: "10px 0", border: "none", borderRadius: 8, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, color: C.white, fontFamily: "inherit", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: `0 2px 12px ${C.sage}40`, minHeight: isMobile ? 48 : "auto" }}>✨ Auto-Assign All</button>
-        {unseated.length > 0 && unseated.length < guests.length && (
-          <button onClick={runAutoComplete} style={{ width: "100%", padding: "8px 0", border: `1.5px solid ${C.gold}`, borderRadius: 8, background: `${C.gold}10`, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.darkGold, cursor: "pointer", minHeight: isMobile ? 44 : "auto" }}>🧩 Seat Remaining ({unseated.length} left)</button>
-        )}
-        <button onClick={() => setConfirmAction({ title: "Clear Seats?", message: "Unseat everyone but keep guest list and tables?", onConfirm: () => { clearAllSeats(); setConfirmAction(null); flash("Seats cleared"); }, onClose: () => setConfirmAction(null) })} style={{ width: "100%", padding: "6px 0", border: "none", borderRadius: 6, background: "transparent", fontFamily: "inherit", fontSize: 12, color: C.warmGray, cursor: "pointer", opacity: 0.6, minHeight: isMobile ? 36 : "auto" }}>Clear all seats</button>
-        <button onClick={() => setConfirmAction({ title: "Start Fresh?", message: "This will clear everything and let you choose a new starting point — dinner party, baby shower, wedding, or blank room.", danger: true, onConfirm: () => { startFresh(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) })} style={{ width: "100%", padding: "6px 0", border: "none", borderRadius: 6, background: "transparent", fontFamily: "inherit", fontSize: 12, color: C.rose, cursor: "pointer", opacity: 0.5, minHeight: isMobile ? 36 : "auto" }}>Start fresh…</button>
-      </div>
+      {renderVenueCallout()}
     </>
   );
 
