@@ -314,7 +314,6 @@ function buildWedding() {
       { id: "t10", name: "Table 10", x: 360, y: 740, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
       { id: "t11", name: "Table 11", x: 600, y: 740, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
       { id: "t12", name: "Table 12", x: 840, y: 740, seatCount: 8, shape: "round", seats: Array(8).fill(null) },
-      { id: "t0", name: "Sweetheart Table", x: 470, y: 20, seatCount: 2, shape: "rect", seats: Array(2).fill(null) },
     ],
     floorObjects: [
       { id: "fo1", label: "Dance Floor", icon: "💃", w: 200, h: 160, x: 380, y: 340, color: "#D4C5F9" },
@@ -346,12 +345,24 @@ function buildBlankRoom() {
 const PRESETS = { dinner: buildDinnerParty, shower: buildBabyShower, wedding: buildWedding, blank: buildBlankRoom };
 const DEFAULT_PRESET = buildWedding();
 
+function readAutosave() {
+  try {
+    const saved = localStorage.getItem(AUTOSAVE_KEY);
+    if (!saved) return null;
+    const state = JSON.parse(saved);
+    const hasOldSweetheartDemo = state.eventName === DEFAULT_PRESET.eventName && state.tables?.some(t => t.name === "Sweetheart Table");
+    return state.isStarterContent === true || hasOldSweetheartDemo ? null : state;
+  } catch {
+    return null;
+  }
+}
+
 // ── Welcome Modal ──
 function WelcomeModal({ onSelect, isMobile }) {
   const presetCards = [
     { key: "dinner", icon: "🍽️", title: "Dinner Party", guests: "16 guests", desc: "One long table, food station & bar cart. Perfect for intimate gatherings.", color: "#5A9FD4" },
     { key: "shower", icon: "🎀", title: "Baby Shower", guests: "40 guests", desc: "5 round tables with gift table, food & drink stations, and photo area.", color: "#E07898" },
-    { key: "wedding", icon: "💒", title: "Wedding Reception", guests: "100 guests", desc: "13 tables with dance floor, DJ booth, bar, cake table, and photo booth.", color: "#9B7ED4" },
+    { key: "wedding", icon: "💒", title: "Wedding Reception", guests: "100 guests", desc: "12 tables with dance floor, DJ booth, bar, cake table, and photo booth.", color: "#9B7ED4" },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)", backdropFilter: "blur(6px)" }}>
@@ -1247,13 +1258,13 @@ function HelpModal({ onClose }) {
         {helpTab === "floor" && (<div>
           <div style={S.section}>
             <div style={S.h}>The Floor Plan</div>
-            <div style={S.p}>The floor plan gives you a visual, birds-eye view of your venue. Tables are shown with colored seats representing each guest's group.</div>
+            <div style={S.p}>The floor plan gives you a visual, birds-eye view of your venue. The dashed outline marks the room boundary, and tables are shown with colored seats representing each guest's group.</div>
             <div style={S.p}><strong>Navigate:</strong> Scroll to zoom, drag the background to pan. On mobile, pinch to zoom and swipe to pan. Use the <strong>⟲</strong> button to auto-center all tables.</div>
             <div style={S.p}><strong>Move tables:</strong> Drag the center of any table to reposition it.</div>
           </div>
           <div style={S.section}>
             <div style={S.h}>Venue Elements</div>
-            <div style={S.p}>In the <strong>Layout</strong> tab, add venue elements like dance floors, bars, photo booths, DJ booths, and more. These help you visualize the full room layout.</div>
+            <div style={S.p}>In the <strong>Layout</strong> tab, add venue elements like dance floors, bars, photo booths, DJ booths, and more. New elements are placed in the first open spot the app can find inside the visible room.</div>
             <div style={S.p}>Elements can be dragged to reposition, resized from the edges, and renamed by double-clicking the label. Use them to plan traffic flow and make sure Grandma isn't next to the speaker stack.</div>
           </div>
           <div style={S.section}>
@@ -1327,34 +1338,37 @@ export default function App() {
   const isMobile = useIsMobile();
   const [mobileView, setMobileView] = useState("list"); // "list" | "floor"
   const [selectedForPlacement, setSelectedForPlacement] = useState(null); // guest id for tap-to-place
+  const savedState = useMemo(readAutosave, []);
 
   const [guests, setGuests] = useState(() => {
-    try { const saved = localStorage.getItem(AUTOSAVE_KEY); if (saved) { const s = JSON.parse(saved); if (s.guests?.length) return s._version < 2 ? migrateV1Guests(s.guests) : s.guests; } } catch {} return DEFAULT_PRESET.guests;
+    if (savedState?.guests?.length) return savedState._version < 2 ? migrateV1Guests(savedState.guests) : savedState.guests;
+    return DEFAULT_PRESET.guests;
   });
   const [tables, setTables] = useState(() => {
-    try { const saved = localStorage.getItem(AUTOSAVE_KEY); if (saved) { const s = JSON.parse(saved); if (s.tables?.length) return s.tables; } } catch {} return DEFAULT_PRESET.tables;
+    if (savedState?.tables?.length) return savedState.tables;
+    return DEFAULT_PRESET.tables;
   });
   const [floorObjects, setFloorObjects] = useState(() => {
-    try { const saved = localStorage.getItem(AUTOSAVE_KEY); if (saved) { const s = JSON.parse(saved); if (s.floorObjects) return s.floorObjects; } } catch {} return DEFAULT_PRESET.floorObjects;
+    if (savedState?.floorObjects) return savedState.floorObjects;
+    return DEFAULT_PRESET.floorObjects;
   });
   const [groupColors, setGroupColors] = useState(() => {
-    try { const saved = localStorage.getItem(AUTOSAVE_KEY); if (saved) { const s = JSON.parse(saved); if (s.groupColors && Object.keys(s.groupColors).length > 1) return s.groupColors; } } catch {} return DEFAULT_PRESET.groupColors;
+    if (savedState?.groupColors && Object.keys(savedState.groupColors).length > 1) return savedState.groupColors;
+    return DEFAULT_PRESET.groupColors;
   });
   const [eventName, setEventName] = useState(() => {
-    try { const saved = localStorage.getItem(AUTOSAVE_KEY); if (saved) { const s = JSON.parse(saved); if (s.eventName !== undefined) return s.eventName; } } catch {} return DEFAULT_PRESET.eventName;
+    if (savedState?.eventName !== undefined) return savedState.eventName;
+    return DEFAULT_PRESET.eventName;
   });
   const [isStarterContent, setIsStarterContent] = useState(() => {
-    try { const saved = localStorage.getItem(AUTOSAVE_KEY); if (saved) { const s = JSON.parse(saved); if (s._hasUserData) return s.isStarterContent === true; } } catch {} return true;
+    if (savedState?._hasUserData) return savedState.isStarterContent === true;
+    return true;
   });
   const [showWelcome, setShowWelcome] = useState(() => {
-    try {
-      const saved = localStorage.getItem(AUTOSAVE_KEY);
-      if (!saved) return true;
-      const s = JSON.parse(saved);
-      // Show welcome if saved data is essentially empty (user hit Start Fresh then refreshed)
-      if (!s.guests?.length && !s.tables?.length && !s._hasUserData) return true;
-      return false;
-    } catch { return true; }
+    if (!savedState) return true;
+    // Show welcome if saved data is essentially empty (user hit Start Fresh then refreshed)
+    if (!savedState.guests?.length && !savedState.tables?.length && !savedState._hasUserData) return true;
+    return false;
   });
 
   const [draggingGuest, setDraggingGuest] = useState(null);
@@ -1458,6 +1472,61 @@ export default function App() {
     y: Math.max(0, Math.min(canvasSize.h - objH, y)),
   }), [canvasSize]);
 
+  const rectsOverlap = (a, b, pad = 18) => !(
+    a.x + a.w + pad < b.x ||
+    b.x + b.w + pad < a.x ||
+    a.y + a.h + pad < b.y ||
+    b.y + b.h + pad < a.y
+  );
+
+  const findOpenFloorSpot = useCallback((objW, objH) => {
+    const occupied = [
+      ...floorObjects.map(o => ({ x: o.x, y: o.y, w: o.w, h: o.h })),
+      ...tables.map(t => {
+        const sz = getTableSize(t);
+        return { x: t.x, y: t.y, w: sz.w, h: sz.h };
+      }),
+    ];
+    const fits = (spot) => !occupied.some(r => rectsOverlap({ ...spot, w: objW, h: objH }, r));
+    const floorRect = floorRef.current?.getBoundingClientRect();
+    const visible = floorRect ? {
+      x: Math.max(0, -pan.x + 32),
+      y: Math.max(0, -pan.y + 32),
+      w: Math.min(canvasSize.w, floorRect.width / zoom),
+      h: Math.min(canvasSize.h, floorRect.height / zoom),
+    } : { x: 32, y: 32, w: canvasSize.w, h: canvasSize.h };
+    const inBounds = (spot, bounds) => (
+      spot.x >= Math.max(24, bounds.x) &&
+      spot.y >= Math.max(54, bounds.y) &&
+      spot.x <= Math.min(canvasSize.w - objW - 24, bounds.x + bounds.w - objW) &&
+      spot.y <= Math.min(canvasSize.h - objH - 24, bounds.y + bounds.h - objH)
+    );
+    const scan = (bounds) => {
+      const minX = Math.max(24, bounds.x);
+      const minY = Math.max(54, bounds.y);
+      const maxX = Math.max(minX, Math.min(canvasSize.w - objW - 24, bounds.x + bounds.w - objW));
+      const maxY = Math.max(minY, Math.min(canvasSize.h - objH - 24, bounds.y + bounds.h - objH));
+      const center = clampPos(bounds.x + bounds.w / 2 - objW / 2, bounds.y + bounds.h / 2 - objH / 2, objW, objH);
+      for (let radius = 0; radius <= Math.max(bounds.w, bounds.h); radius += 44) {
+        for (let dy = -radius; dy <= radius; dy += 44) {
+          for (let dx = -radius; dx <= radius; dx += 44) {
+            if (Math.abs(dx) !== radius && Math.abs(dy) !== radius) continue;
+            const spot = clampPos(center.x + dx, center.y + dy, objW, objH);
+            if (inBounds(spot, bounds) && fits(spot)) return spot;
+          }
+        }
+      }
+      for (let y = minY; y <= maxY; y += 36) {
+        for (let x = minX; x <= maxX; x += 36) {
+          const spot = clampPos(x, y, objW, objH);
+          if (fits(spot)) return spot;
+        }
+      }
+      return null;
+    };
+    return scan(visible) || scan({ x: 24, y: 54, w: canvasSize.w - 48, h: canvasSize.h - 78 }) || clampPos(48, 72, objW, objH);
+  }, [canvasSize, clampPos, floorObjects, pan, tables, zoom]);
+
   const totalSeats = tables.reduce((n, t) => n + t.seatCount, 0);
   const totalSeated = seatedSet.size;
   const openSeats = totalSeats - totalSeated;
@@ -1515,7 +1584,11 @@ export default function App() {
     }));
   };
 
-  const addFloorObject = (preset) => { setFloorObjects(p => [...p, { ...preset, id: uid("fo"), x: 150 + Math.random() * 200, y: 150 + Math.random() * 100 }]); };
+  const addFloorObject = (preset) => {
+    const spot = findOpenFloorSpot(preset.w, preset.h);
+    setFloorObjects(p => [...p, { ...preset, id: uid("fo"), x: spot.x, y: spot.y }]);
+    flash(`Added ${preset.label}`);
+  };
   const updateFloorObject = (obj) => { const clamped = clampPos(obj.x, obj.y, obj.w, obj.h); setFloorObjects(p => p.map(o => o.id === obj.id ? { ...obj, x: clamped.x, y: clamped.y } : o)); };
   const removeFloorObject = (id) => setFloorObjects(p => p.filter(o => o.id !== id));
 
@@ -1840,7 +1913,7 @@ export default function App() {
         </div>)}
 
         {tab === "layout" && (<div>
-          <div style={{ fontSize: 13.5, color: C.warmGray, marginBottom: 12, lineHeight: 1.5 }}>Add venue elements.{!isMobile ? " Drag to position, hover edges to resize, double-click to rename." : " Switch to Floor View to position them."}</div>
+          <div style={{ fontSize: 13.5, color: C.warmGray, marginBottom: 12, lineHeight: 1.5 }}>Add venue elements.{!isMobile ? " New items appear in an open spot inside the room boundary. Drag to position, hover edges to resize, double-click to rename." : " New items appear in an open spot inside the room boundary. Switch to Floor View to position them."}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
             {FLOOR_PRESETS.map((p, i) => (
               <button key={i} onClick={() => addFloorObject(p)} style={{ padding: "10px 6px", border: `1.5px solid ${C.lightGray}`, borderRadius: 9, background: C.white, fontFamily: "inherit", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, color: C.charcoal, minHeight: isMobile ? 48 : "auto" }}>
@@ -1945,8 +2018,13 @@ export default function App() {
 
       {!isMobile && <div style={{ position: "absolute", bottom: 10, right: 10, fontSize: 11.5, color: C.warmGray, background: `${C.white}90`, padding: "4px 8px", borderRadius: 6, zIndex: 10 }}>Scroll to zoom · Drag space to pan · Ctrl+Z undo</div>}
 
+      <div style={{ position: "absolute", top: isMobile ? 58 : 10, left: isMobile ? 10 : undefined, right: isMobile ? undefined : 64, zIndex: 21, display: "flex", alignItems: "center", gap: 7, padding: "6px 10px", borderRadius: 8, background: `${C.white}F2`, border: `1.5px dashed ${C.gold}`, color: C.darkGold, fontSize: 12, fontWeight: 700, boxShadow: "0 2px 10px rgba(0,0,0,0.06)", pointerEvents: "none" }}>
+        <span style={{ width: 14, height: 10, border: `2px dashed ${C.gold}`, borderRadius: 3, display: "inline-block" }} />
+        Room boundary
+      </div>
+
       <div ref={floorRef} onMouseDown={handlePanStart} style={{ width: "100%", height: "100%", position: "relative", overflow: "hidden", cursor: panning ? "grabbing" : (draggingTable ? "grabbing" : "grab"), touchAction: "none" }}>
-        <div style={{ transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`, transformOrigin: "0 0", position: "absolute", width: canvasSize.w, height: canvasSize.h, background: `linear-gradient(180deg, #FAF6F0 0%, #F5EDE4 100%)`, backgroundImage: `radial-gradient(circle, ${C.lightGray}28 1px, transparent 1px)`, backgroundSize: "32px 32px" }}>
+        <div style={{ transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`, transformOrigin: "0 0", position: "absolute", width: canvasSize.w, height: canvasSize.h, boxSizing: "border-box", border: `4px dashed ${C.gold}`, borderRadius: 18, background: `linear-gradient(180deg, #FAF6F0 0%, #F5EDE4 100%)`, backgroundImage: `radial-gradient(circle, ${C.lightGray}28 1px, transparent 1px)`, backgroundSize: "32px 32px", boxShadow: `inset 0 0 0 8px ${C.white}85, inset 0 0 42px ${C.gold}16` }}>
           {floorObjects.map(o => <FloorObject key={o.id} obj={o} onUpdate={updateFloorObject} onRemove={removeFloorObject} zoom={zoom} />)}
           {tables.map(t => { const tsz = getTableSize(t); const cx = tsz.w / 2; const cy = tsz.h / 2; return (<div key={`h-${t.id}`} onMouseDown={e => handleFloorMouseDown(e, t.id)} onTouchStart={e => handleFloorTouchStart(e, t.id)} style={{ position: "absolute", left: t.x + cx - 18, top: t.y + cy - 18, width: 36, height: 36, borderRadius: "50%", cursor: "grab", zIndex: 5, touchAction: "none" }} />); })}
           {tables.map(t => <TableViz key={t.id} table={t} gm={gm} gc={gc} onDrop={dropGuest} onRemove={unseat} conflicts={conflicts} onRename={renameTable} onSeatChange={changeSeatCount} onDelete={(id) => setConfirmAction({ title: `Remove ${t.name}?`, message: `This will unseat ${t.seats.filter(Boolean).length} guest${t.seats.filter(Boolean).length !== 1 ? "s" : ""} and remove the table. You can undo with Ctrl+Z.`, danger: true, onConfirm: () => { removeTable(id); setConfirmAction(null); flash(`Removed ${t.name}`); }, onClose: () => setConfirmAction(null) })} />)}
