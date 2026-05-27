@@ -1448,6 +1448,7 @@ export default function App() {
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [guidedStep, setGuidedStep] = useState(null);
+  const [guidedCompleted, setGuidedCompleted] = useState({});
   const floorRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -1478,6 +1479,7 @@ export default function App() {
     setShowMobileMenu(false);
     setTab("guests");
     setGuidedStep(0);
+    setGuidedCompleted({});
     flash("Guided demo loaded");
   }, []);
 
@@ -1709,39 +1711,92 @@ export default function App() {
   const runAutoAssign = () => { const r = assignGuests(guests, tables, gm, groups); setTables(r); const c = getConflicts(r, gm); const s = r.reduce((n, t) => n + t.seats.filter(Boolean).length, 0); const un = guests.length - s; flash(c.length === 0 && un === 0 ? `Seated all ${s} guests!` : c.length === 0 && un > 0 ? `Seated ${s} of ${guests.length} — ${un} need seats` : `Seated ${s} of ${guests.length} — ${c.length} conflict${c.length > 1 ? "s" : ""}`, c.length || un > 0 ? "warn" : "success"); };
   const runAutoComplete = () => { const already = new Set(); tables.forEach(t => t.seats.forEach(s => s && already.add(s))); const rem = guests.filter(g => !already.has(g.id)).length; if (!rem) { flash("Everyone seated!"); return; } const r = assignGuests(guests, tables, gm, groups, true); setTables(r); const c = getConflicts(r, gm); const newS = r.reduce((n, t) => n + t.seats.filter(Boolean).length, 0) - already.size; flash(c.length === 0 ? `Placed ${newS} remaining!` : `Placed ${newS} — ${c.length} conflict${c.length > 1 ? "s" : ""}`, c.length ? "warn" : "success"); };
   const clearAllSeats = () => setTables(p => p.map(t => ({ ...t, seats: Array(t.seatCount).fill(null) })));
+  const markGuidedComplete = (step) => setGuidedCompleted(p => ({ ...p, [step]: true }));
+  const isGuidedStepSatisfied = (step) => {
+    switch (step) {
+      case 1:
+        return totalSeated >= Math.min(totalSeats, guests.length);
+      case 2:
+        return totalSeats >= guests.length;
+      case 3:
+        return !guests.some(g => g.id === "v15" || g.id === "v16");
+      case 4:
+        return guests.some(g => g.id === "guided_guest_1") && guests.some(g => g.id === "guided_guest_2");
+      case 5:
+        return floorObjects.some(o => o.id === "guided_second_bar" || o.label === "Second Bar");
+      default:
+        return false;
+    }
+  };
 
   const guidedActions = [
-    () => { setTab("guests"); flash("This demo starts with 100 guests and only 80 seats.", "warn"); },
-    () => { setTab("guests"); runAutoAssign(); },
+    () => { setTab("guests"); flash("This demo starts with 100 guests and only 80 seats.", "warn"); markGuidedComplete(0); },
+    () => {
+      setTab("guests");
+      if (totalSeated >= Math.min(totalSeats, guests.length)) {
+        flash(`${totalSeated} guests are already seated.`);
+      } else {
+        runAutoAssign();
+      }
+      markGuidedComplete(1);
+    },
     () => {
       const preset = buildWedding();
       const extraTables = preset.tables.slice(10, 12).map(t => ({ ...t, seatCount: 10, seats: Array(10).fill(null) }));
       setTab("tables");
-      setTables(p => {
-        const existing = new Set(p.map(t => t.id));
-        const withTables = [...p, ...extraTables.filter(t => !existing.has(t.id))];
-        const demoGm = Object.fromEntries(guests.map(g => [g.id, g]));
-        return assignGuests(guests, withTables, demoGm, Object.keys(groupColors), true);
+      const hasEnoughSeats = tables.reduce((n, t) => n + t.seatCount, 0) >= guests.length;
+      if (hasEnoughSeats) {
+        if (unseated.length) runAutoComplete();
+        else flash("You already have enough seats.");
+      } else {
+        setTables(p => {
+          const existing = new Set(p.map(t => t.id));
+          const withTables = [...p, ...extraTables.filter(t => !existing.has(t.id))];
+          const demoGm = Object.fromEntries(guests.map(g => [g.id, g]));
+          return assignGuests(guests, withTables, demoGm, Object.keys(groupColors), true);
+        });
+        flash("Added 2 tables and seated the remaining guests.");
+      }
+      markGuidedComplete(2);
+    },
+    () => {
+      const removeIds = ["v15", "v16"].filter(id => guests.some(g => g.id === id));
+      setTab("guests");
+      if (removeIds.length) {
+        setGuests(p => p.filter(g => !removeIds.includes(g.id)));
+        setTables(p => p.map(t => ({ ...t, seats: t.seats.map(s => removeIds.includes(s) ? null : s) })));
+        flash(`Removed ${removeIds.length} guest${removeIds.length > 1 ? "s" : ""} from the list.`);
+      } else {
+        flash("Those demo guests are already removed.");
+      }
+      markGuidedComplete(3);
+    },
+    () => {
+      setTab("guests");
+      const added = [
+        ...makeGuest("Jordan Blake", "Friends", 0, { id: "guided_guest_1" }),
+        ...makeGuest("Taylor Morgan", "Colleagues", 0, { id: "guided_guest_2" }),
+      ];
+      setGuests(p => {
+        const existing = new Set(p.map(g => g.id));
+        const newGuests = added.filter(g => !existing.has(g.id));
+        if (!newGuests.length) return p;
+        return [...p, ...newGuests];
       });
-      flash("Added 2 tables and seated the remaining guests.");
-    },
-    () => {
-      const removeIds = guests.slice(-2).map(g => g.id);
-      setTab("guests");
-      setGuests(p => p.filter(g => !removeIds.includes(g.id)));
-      setTables(p => p.map(t => ({ ...t, seats: t.seats.map(s => removeIds.includes(s) ? null : s) })));
-      flash("Removed 2 guests from the list.");
-    },
-    () => {
-      setTab("guests");
-      const added = [...makeGuest("Jordan Blake", "Friends", 0), ...makeGuest("Taylor Morgan", "Colleagues", 0)];
-      setGuests(p => [...p, ...added]);
-      flash("Added 2 new guests.");
+      flash(guests.some(g => g.id === "guided_guest_1" || g.id === "guided_guest_2") ? "The demo guests are already added." : "Added 2 new guests.");
+      markGuidedComplete(4);
     },
     () => {
       setTab("layout");
       const bar = FLOOR_PRESETS.find(p => p.label === "Bar");
-      if (bar) addFloorObject({ ...bar, label: "Second Bar" });
+      if (bar && !floorObjects.some(o => o.id === "guided_second_bar" || o.label === "Second Bar")) {
+        const spot = findOpenFloorSpot(bar.w, bar.h);
+        setFloorObjects(p => [...p, { ...bar, id: "guided_second_bar", label: "Second Bar", x: spot.x, y: spot.y }]);
+        flash("Added Second Bar");
+      } else {
+        flash("Second Bar is already on the floor.");
+      }
+      markGuidedComplete(5);
     },
   ];
 
@@ -2156,6 +2211,7 @@ export default function App() {
     if (guidedStep === null) return null;
     const step = guidedSteps[guidedStep];
     const isLast = guidedStep >= guidedSteps.length - 1;
+    const isComplete = guidedCompleted[guidedStep] === true || isGuidedStepSatisfied(guidedStep);
     return (
       <div style={{ position: "fixed", right: isMobile ? 12 : 18, bottom: isMobile ? 12 : 18, zIndex: 900, width: isMobile ? "calc(100vw - 24px)" : 360, background: `${C.white}F7`, border: `1.5px solid ${C.sage}45`, borderRadius: 16, boxShadow: "0 16px 44px rgba(0,0,0,0.18)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
         <div style={{ padding: "14px 16px 10px", borderBottom: `1px solid ${C.lightGray}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
@@ -2174,7 +2230,15 @@ export default function App() {
             <button onClick={() => setGuidedStep(s => Math.max(0, s - 1))} disabled={guidedStep === 0} style={{ padding: "8px 12px", border: `1px solid ${C.lightGray}`, borderRadius: 9, background: C.white, color: guidedStep === 0 ? C.lightGray : C.warmGray, fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: guidedStep === 0 ? "default" : "pointer" }}>Back</button>
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => setGuidedStep(null)} style={{ padding: "8px 12px", border: `1px solid ${C.lightGray}`, borderRadius: 9, background: C.white, color: C.warmGray, fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Skip</button>
-              <button onClick={() => { guidedActions[guidedStep]?.(); setGuidedStep(s => isLast ? null : s + 1); }} style={{ padding: "8px 14px", border: "none", borderRadius: 9, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, color: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>{isLast ? "Finish" : step.action}</button>
+              <button
+                onClick={() => {
+                  if (!isComplete) guidedActions[guidedStep]?.();
+                  setGuidedStep(s => isLast ? null : s + 1);
+                }}
+                style={{ padding: "8px 14px", border: "none", borderRadius: 9, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, color: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 800, cursor: "pointer" }}
+              >
+                {isLast ? "Finish" : isComplete ? "Next" : step.action}
+              </button>
             </div>
           </div>
         </div>
