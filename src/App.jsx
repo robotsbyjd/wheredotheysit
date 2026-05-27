@@ -358,7 +358,7 @@ function readAutosave() {
 }
 
 // ── Welcome Modal ──
-function WelcomeModal({ onSelect, isMobile }) {
+function WelcomeModal({ onSelect, onGuidedDemo, isMobile }) {
   const presetCards = [
     { key: "dinner", icon: "🍽️", title: "Dinner Party", guests: "16 guests", desc: "One long table, food station & bar cart. Perfect for intimate gatherings.", color: "#5A9FD4" },
     { key: "shower", icon: "🎀", title: "Baby Shower", guests: "40 guests", desc: "5 round tables with gift table, food & drink stations, and photo area.", color: "#E07898" },
@@ -385,11 +385,16 @@ function WelcomeModal({ onSelect, isMobile }) {
         </div>
         <div style={{ padding: isMobile ? "10px 16px 24px" : "6px 36px 30px", textAlign: "center" }}>
           <div style={{ fontSize: 12, color: C.warmGray, opacity: 0.5, marginBottom: 10 }}>— or —</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+          <button onClick={onGuidedDemo} style={{ padding: "10px 28px", border: "none", borderRadius: 10, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, fontFamily: "inherit", fontSize: 14, color: C.white, cursor: "pointer", fontWeight: 700, transition: "all 0.15s", boxShadow: `0 3px 14px ${C.sage}28` }}>
+            Try Guided Demo
+          </button>
           <button onClick={() => onSelect("blank")} style={{ padding: "10px 28px", border: `1.5px solid ${C.lightGray}`, borderRadius: 10, background: C.white, fontFamily: "inherit", fontSize: 14, color: C.warmGray, cursor: "pointer", fontWeight: 500, transition: "all 0.15s" }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = C.sage; e.currentTarget.style.color = C.darkSage; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.lightGray; e.currentTarget.style.color = C.warmGray; }}>
             Start with a Blank Room
           </button>
+          </div>
         </div>
       </div>
     </div>
@@ -795,6 +800,52 @@ function ConfirmModal({ title, message, onConfirm, onClose, danger, confirmLabel
   </div>);
 }
 
+function VenueVersionModal({ onClose }) {
+  const featureCards = [
+    ["Real floorplans", "Preload your rooms, table zones, fixed bars, stages, exits, and no-place areas."],
+    ["Venue branding", "Use your name, colors, and client-facing language throughout the experience."],
+    ["Room options", "Support multiple spaces, locations, layouts, or packages from one tailored planner."],
+    ["Launch support", "We can help scope, build, test, and launch your custom WhereDoTheySit.com."],
+  ];
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.38)", backdropFilter: "blur(5px)", padding: 16 }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: C.white, borderRadius: 18, width: "min(620px, 94vw)", maxHeight: "88vh", overflow: "hidden", boxShadow: "0 24px 70px rgba(0,0,0,0.24)", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "22px 26px 16px", borderBottom: `1px solid ${C.lightGray}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 1.4, color: C.darkSage, fontWeight: 800, marginBottom: 6 }}>For venues, planners, and event teams</div>
+            <h3 style={{ margin: 0, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 25, lineHeight: 1.15, fontWeight: 700, color: C.charcoal }}>Your venue deserves its own seating planner.</h3>
+          </div>
+          <button onClick={onClose} aria-label="Close venue version details" style={{ border: "none", background: "transparent", color: C.warmGray, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 4 }}>×</button>
+        </div>
+        <div style={{ padding: "18px 26px 6px", overflowY: "auto" }}>
+          <p style={{ margin: "0 0 13px", fontSize: 15.5, color: C.warmGray, lineHeight: 1.65 }}>
+            WhereDoTheySit helps couples and event hosts turn a messy guest list into a practical room plan. A custom venue version can take that one step further by starting every client with your actual space, your setup rules, and your preferred planning workflow already built in.
+          </p>
+          <p style={{ margin: "0 0 16px", fontSize: 15.5, color: C.warmGray, lineHeight: 1.65 }}>
+            Every venue is different: room shapes, capacity limits, table inventories, ceremony-to-reception flips, catering stations, dance-floor rules, sponsor tables, VIP areas, and the little details your staff already knows by heart. Those configuration options can be hard-coded so guests are planning inside something that feels like your venue, not a generic blank canvas.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10, margin: "0 0 16px" }}>
+            {featureCards.map(([title, body]) => (
+              <div key={title} style={{ padding: "12px 13px", border: `1px solid ${C.lightGray}`, borderRadius: 10, background: `${C.cream}75` }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, marginBottom: 4 }}>{title}</div>
+                <div style={{ fontSize: 13.5, color: C.warmGray, lineHeight: 1.45 }}>{body}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "13px 15px", borderRadius: 12, background: `linear-gradient(135deg, ${C.sage}18, ${C.gold}12)`, border: `1px solid ${C.sage}30`, color: C.charcoal, fontSize: 14.5, lineHeight: 1.6 }}>
+            Interested in a version tailored to your venue? Email us for a free consultation about building and launching your own custom WhereDoTheySit.com.
+          </div>
+        </div>
+        <div style={{ padding: "16px 26px 22px", display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "flex-end", borderTop: `1px solid ${C.lightGray}` }}>
+          <button onClick={onClose} style={{ padding: "9px 18px", border: `1.5px solid ${C.lightGray}`, borderRadius: 10, background: C.white, fontFamily: "inherit", fontSize: 14, color: C.warmGray, cursor: "pointer", fontWeight: 600 }}>Maybe later</button>
+          <a href={CUSTOM_MAILTO} style={{ padding: "9px 20px", border: "none", borderRadius: 10, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, fontFamily: "inherit", fontSize: 14, color: C.white, textDecoration: "none", fontWeight: 800, display: "inline-flex", alignItems: "center" }}>Email {CUSTOM_EMAIL}</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GuestEditModal({ guest, gm, gc, groups, onClose, onSave, onRemove, isMobile }) {
   const [name, setName] = useState(guest.name);
   const [group, setGroup] = useState(guest.group);
@@ -1162,7 +1213,7 @@ body{font-family:'Georgia',serif;padding:48px 44px 60px;color:#2D2D2D;background
   </div>);
 }
 
-function HelpModal({ onClose }) {
+function HelpModal({ onClose, onGuidedDemo }) {
   const [helpTab, setHelpTab] = useState("start");
   const S = {
     section: { marginBottom: 20 },
@@ -1198,6 +1249,7 @@ function HelpModal({ onClose }) {
           <div style={S.section}>
             <div style={S.h}>Welcome! Here's how to plan your seating in 5 minutes.</div>
             <div style={S.p}>WhereDoTheySit helps you organize seating for weddings, parties, galas, and any event with assigned tables. Here's the quickest path to a finished plan:</div>
+            <button onClick={onGuidedDemo} style={{ marginTop: 8, padding: "9px 16px", border: "none", borderRadius: 10, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, color: C.white, fontFamily: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Try the Guided Demo</button>
           </div>
           <div style={S.section}>
             <div style={S.step}><div style={S.stepNum}>1</div><div style={S.stepText}><strong>Add your guests.</strong> Type names one at a time, or use <strong>Import / CSV</strong> to paste a list or upload a spreadsheet. Set each guest's group (e.g., "Bride's Side") and +1 count.</div></div>
@@ -1385,6 +1437,7 @@ export default function App() {
   const [showExport, setShowExport] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showVenueVersion, setShowVenueVersion] = useState(false);
   const [editingGuest, setEditingGuest] = useState(null);
   const [zoom, setZoom] = useState(() => isMobile ? 0.4 : 1);
   const [pan, setPan] = useState(() => isMobile ? { x: 0, y: 0 } : { x: 0, y: 0 });
@@ -1394,6 +1447,7 @@ export default function App() {
   const [prefsSearch, setPrefsSearch] = useState("");
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [guidedStep, setGuidedStep] = useState(null);
   const floorRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -1409,6 +1463,22 @@ export default function App() {
     setEventName(preset.eventName || "");
     setIsStarterContent(key !== "blank");
     setShowWelcome(false);
+  }, []);
+
+  const startGuidedDemo = useCallback(() => {
+    const preset = buildWedding();
+    setGuests(preset.guests);
+    setTables(preset.tables.slice(0, 10).map(t => ({ ...t, seatCount: 8, seats: Array(8).fill(null) })));
+    setFloorObjects(preset.floorObjects);
+    setGroupColors(preset.groupColors);
+    setEventName("Guided Demo: 100-Guest Wedding");
+    setIsStarterContent(true);
+    setShowWelcome(false);
+    setShowHelp(false);
+    setShowMobileMenu(false);
+    setTab("guests");
+    setGuidedStep(0);
+    flash("Guided demo loaded");
   }, []);
 
   // ── Undo/Redo ──
@@ -1639,6 +1709,50 @@ export default function App() {
   const runAutoAssign = () => { const r = assignGuests(guests, tables, gm, groups); setTables(r); const c = getConflicts(r, gm); const s = r.reduce((n, t) => n + t.seats.filter(Boolean).length, 0); const un = guests.length - s; flash(c.length === 0 && un === 0 ? `Seated all ${s} guests!` : c.length === 0 && un > 0 ? `Seated ${s} of ${guests.length} — ${un} need seats` : `Seated ${s} of ${guests.length} — ${c.length} conflict${c.length > 1 ? "s" : ""}`, c.length || un > 0 ? "warn" : "success"); };
   const runAutoComplete = () => { const already = new Set(); tables.forEach(t => t.seats.forEach(s => s && already.add(s))); const rem = guests.filter(g => !already.has(g.id)).length; if (!rem) { flash("Everyone seated!"); return; } const r = assignGuests(guests, tables, gm, groups, true); setTables(r); const c = getConflicts(r, gm); const newS = r.reduce((n, t) => n + t.seats.filter(Boolean).length, 0) - already.size; flash(c.length === 0 ? `Placed ${newS} remaining!` : `Placed ${newS} — ${c.length} conflict${c.length > 1 ? "s" : ""}`, c.length ? "warn" : "success"); };
   const clearAllSeats = () => setTables(p => p.map(t => ({ ...t, seats: Array(t.seatCount).fill(null) })));
+
+  const guidedActions = [
+    () => { setTab("guests"); flash("This demo starts with 100 guests and only 80 seats.", "warn"); },
+    () => { setTab("guests"); runAutoAssign(); },
+    () => {
+      const preset = buildWedding();
+      const extraTables = preset.tables.slice(10, 12).map(t => ({ ...t, seatCount: 10, seats: Array(10).fill(null) }));
+      setTab("tables");
+      setTables(p => {
+        const existing = new Set(p.map(t => t.id));
+        const withTables = [...p, ...extraTables.filter(t => !existing.has(t.id))];
+        const demoGm = Object.fromEntries(guests.map(g => [g.id, g]));
+        return assignGuests(guests, withTables, demoGm, Object.keys(groupColors), true);
+      });
+      flash("Added 2 tables and seated the remaining guests.");
+    },
+    () => {
+      const removeIds = guests.slice(-2).map(g => g.id);
+      setTab("guests");
+      setGuests(p => p.filter(g => !removeIds.includes(g.id)));
+      setTables(p => p.map(t => ({ ...t, seats: t.seats.map(s => removeIds.includes(s) ? null : s) })));
+      flash("Removed 2 guests from the list.");
+    },
+    () => {
+      setTab("guests");
+      const added = [...makeGuest("Jordan Blake", "Friends", 0), ...makeGuest("Taylor Morgan", "Colleagues", 0)];
+      setGuests(p => [...p, ...added]);
+      flash("Added 2 new guests.");
+    },
+    () => {
+      setTab("layout");
+      const bar = FLOOR_PRESETS.find(p => p.label === "Bar");
+      if (bar) addFloorObject({ ...bar, label: "Second Bar" });
+    },
+  ];
+
+  const guidedSteps = [
+    { title: "Start with a real problem", body: "You are planning a 100-person wedding, but this room starts with only 10 tables of 8 seats each. That means 80 seats for 100 guests.", action: "Show the setup" },
+    { title: "Auto-assign what fits", body: "Use Auto-Assign All. The tool seats everyone it can and warns you that 20 guests still need seats.", action: "Auto-Assign All" },
+    { title: "Add capacity", body: "Now add two more 10-seat tables. The demo also seats the remaining guests so you can see the room recover.", action: "Add 2 tables" },
+    { title: "Plans change", body: "Two guests are no longer coming. Remove them from the guest list and their table seats clear automatically.", action: "Remove 2 guests" },
+    { title: "Add late guests", body: "Now add two new guests to the party. They appear in the guest list ready to seat.", action: "Add 2 guests" },
+    { title: "Adjust the layout", body: "Add a second bar to the room. New layout elements land in an open, visible spot inside the room boundary.", action: "Add 2nd bar" },
+  ];
 
   const saveState = () => {
     const state = { guests, tables, floorObjects, groupColors, eventName, isStarterContent, _hasUserData: true, _version: 2 };
@@ -2038,16 +2152,48 @@ export default function App() {
     </div>
   );
 
+  const renderGuidedDemo = () => {
+    if (guidedStep === null) return null;
+    const step = guidedSteps[guidedStep];
+    const isLast = guidedStep >= guidedSteps.length - 1;
+    return (
+      <div style={{ position: "fixed", right: isMobile ? 12 : 18, bottom: isMobile ? 12 : 18, zIndex: 900, width: isMobile ? "calc(100vw - 24px)" : 360, background: `${C.white}F7`, border: `1.5px solid ${C.sage}45`, borderRadius: 16, boxShadow: "0 16px 44px rgba(0,0,0,0.18)", overflow: "hidden", backdropFilter: "blur(12px)" }}>
+        <div style={{ padding: "14px 16px 10px", borderBottom: `1px solid ${C.lightGray}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1.2, color: C.darkSage, fontWeight: 800 }}>Guided demo · Step {guidedStep + 1} of {guidedSteps.length}</div>
+            <div style={{ marginTop: 3, fontSize: 17, fontWeight: 800, color: C.charcoal }}>{step.title}</div>
+          </div>
+          <button onClick={() => setGuidedStep(null)} aria-label="Close guided demo" style={{ border: "none", background: "transparent", color: C.warmGray, cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
+        </div>
+        <div style={{ padding: "12px 16px 14px" }}>
+          <div style={{ fontSize: 14, color: C.warmGray, lineHeight: 1.55, marginBottom: 12 }}>{step.body}</div>
+          <div style={{ height: 5, borderRadius: 99, background: `${C.lightGray}80`, overflow: "hidden", marginBottom: 13 }}>
+            <div style={{ width: `${((guidedStep + 1) / guidedSteps.length) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${C.sage}, ${C.gold})` }} />
+          </div>
+          <div style={{ display: "flex", gap: 8, justifyContent: "space-between" }}>
+            <button onClick={() => setGuidedStep(s => Math.max(0, s - 1))} disabled={guidedStep === 0} style={{ padding: "8px 12px", border: `1px solid ${C.lightGray}`, borderRadius: 9, background: C.white, color: guidedStep === 0 ? C.lightGray : C.warmGray, fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: guidedStep === 0 ? "default" : "pointer" }}>Back</button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => setGuidedStep(null)} style={{ padding: "8px 12px", border: `1px solid ${C.lightGray}`, borderRadius: 9, background: C.white, color: C.warmGray, fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Skip</button>
+              <button onClick={() => { guidedActions[guidedStep]?.(); setGuidedStep(s => isLast ? null : s + 1); }} style={{ padding: "8px 14px", border: "none", borderRadius: 9, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, color: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>{isLast ? "Finish" : step.action}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div style={{ fontFamily: "'Crimson Pro', Georgia, serif", background: `linear-gradient(170deg, ${C.cream} 0%, #F5EDE4 50%, ${C.cream} 100%)`, height: isMobile ? "100dvh" : "auto", minHeight: isMobile ? "100vh" : "100vh", maxHeight: isMobile ? "100dvh" : "none", color: C.charcoal, display: "flex", flexDirection: "column", overflow: isMobile ? "hidden" : "visible" }}>
       <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" />
       {showBulk && <BulkImportModal onClose={() => setShowBulk(false)} onImport={bulkImport} onImportCSV={csvImport} groups={groups} gc={gc} />}
       {showAddTable && <AddTableModal onClose={() => setShowAddTable(false)} onAdd={addTable} />}
       {showExport && <ExportModal tables={tables} guests={guests} gm={gm} gc={gc} eventName={eventName} conflicts={conflicts} onClose={() => setShowExport(false)} />}
-      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} onGuidedDemo={startGuidedDemo} />}
+      {showVenueVersion && <VenueVersionModal onClose={() => setShowVenueVersion(false)} />}
       {confirmAction && <ConfirmModal {...confirmAction} />}
-      {showWelcome && <WelcomeModal isMobile={isMobile} onSelect={loadPreset} />}
+      {showWelcome && <WelcomeModal isMobile={isMobile} onSelect={loadPreset} onGuidedDemo={startGuidedDemo} />}
       {editingGuest && gm[editingGuest] && <GuestEditModal guest={gm[editingGuest]} gm={gm} gc={gc} groups={groups} onClose={() => setEditingGuest(null)} onSave={editGuest} onRemove={removeGuest} isMobile={isMobile} />}
+      {renderGuidedDemo()}
       <input ref={fileInputRef} type="file" accept=".json" onChange={loadState} style={{ display: "none" }} />
 
       {/* ── Header ── */}
@@ -2092,7 +2238,7 @@ export default function App() {
                       { label: "📂 Load", action: () => { setShowMobileMenu(false); setConfirmAction({ title: "Load a Saved Plan", message: "Choose a file you previously saved. This will replace your current guest list, tables, and layout with whatever is in the file.", confirmLabel: "📂 Choose File", onConfirm: () => { fileInputRef.current?.click(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) }); } },
                       { label: "📤 Export", action: () => { setShowExport(true); setShowMobileMenu(false); } },
                       { label: "? Help", action: () => { setShowHelp(true); setShowMobileMenu(false); } },
-                      { label: "🏛 Venue Version", action: () => { window.location.href = CUSTOM_MAILTO; setShowMobileMenu(false); } },
+                      { label: "🏛 Venue Version", action: () => { setShowVenueVersion(true); setShowMobileMenu(false); } },
                       { label: "☕ Support", action: () => { window.open("https://ko-fi.com/deptappliedmagic", "_blank"); setShowMobileMenu(false); } },
                       { label: "🔄 Start Fresh", action: () => { setShowMobileMenu(false); setConfirmAction({ title: "Start Fresh?", message: "This will clear everything and let you choose a new starting point.", danger: true, onConfirm: () => { startFresh(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) }); } },
                     ].map((item, i, arr) => (
@@ -2108,7 +2254,7 @@ export default function App() {
                 <button onClick={() => setConfirmAction({ title: "Load a Saved Plan", message: "Choose a file you previously saved from WhereDoTheySit. This will replace your current guest list, tables, and layout with whatever is in the file. (Your current work is auto-saved, so you can undo this by refreshing the page.)", confirmLabel: "📂 Choose File", onConfirm: () => { fileInputRef.current?.click(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) })} title="Load layout" style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>📂 Load</button>
                 <button onClick={() => setShowExport(true)} style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>📤 Export</button>
                 <button onClick={() => setShowHelp(true)} style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>? Help</button>
-                <a href={CUSTOM_MAILTO} style={{ padding: "6px 14px", border: `1.5px solid ${C.sage}40`, borderRadius: 8, background: `${C.sage}08`, fontFamily: "inherit", fontSize: 13, fontWeight: 700, color: C.darkSage, textDecoration: "none", display: "flex", alignItems: "center" }}>🏛 Venue Version</a>
+                <button onClick={() => setShowVenueVersion(true)} style={{ padding: "6px 14px", border: `1.5px solid ${C.sage}40`, borderRadius: 8, background: `${C.sage}08`, fontFamily: "inherit", fontSize: 13, fontWeight: 700, color: C.darkSage, cursor: "pointer", display: "flex", alignItems: "center" }}>🏛 Venue Version</button>
                 <a href="https://ko-fi.com/deptappliedmagic" target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", border: `1.5px solid ${C.gold}40`, borderRadius: 8, background: `${C.gold}08`, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.gold, textDecoration: "none", display: "flex", alignItems: "center" }}>☕ Support</a>
               </>
             )}
