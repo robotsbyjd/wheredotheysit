@@ -795,6 +795,52 @@ function ConfirmModal({ title, message, onConfirm, onClose, danger, confirmLabel
   </div>);
 }
 
+function VenueVersionModal({ onClose }) {
+  const featureCards = [
+    ["Real floorplans", "Preload your rooms, table zones, fixed bars, stages, exits, and no-place areas."],
+    ["Venue branding", "Use your name, colors, and client-facing language throughout the experience."],
+    ["Room options", "Support multiple spaces, locations, layouts, or packages from one tailored planner."],
+    ["Launch support", "We can help scope, build, test, and launch your custom WhereDoTheySit.com."],
+  ];
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.38)", backdropFilter: "blur(5px)", padding: 16 }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: C.white, borderRadius: 18, width: "min(620px, 94vw)", maxHeight: "88vh", overflow: "hidden", boxShadow: "0 24px 70px rgba(0,0,0,0.24)", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "22px 26px 16px", borderBottom: `1px solid ${C.lightGray}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 1.4, color: C.darkSage, fontWeight: 800, marginBottom: 6 }}>For venues, planners, and event teams</div>
+            <h3 style={{ margin: 0, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 25, lineHeight: 1.15, fontWeight: 700, color: C.charcoal }}>Your venue deserves its own seating planner.</h3>
+          </div>
+          <button onClick={onClose} aria-label="Close venue version details" style={{ border: "none", background: "transparent", color: C.warmGray, cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 4 }}>×</button>
+        </div>
+        <div style={{ padding: "18px 26px 6px", overflowY: "auto" }}>
+          <p style={{ margin: "0 0 13px", fontSize: 15.5, color: C.warmGray, lineHeight: 1.65 }}>
+            WhereDoTheySit helps couples and event hosts turn a messy guest list into a practical room plan. A custom venue version can take that one step further by starting every client with your actual space, your setup rules, and your preferred planning workflow already built in.
+          </p>
+          <p style={{ margin: "0 0 16px", fontSize: 15.5, color: C.warmGray, lineHeight: 1.65 }}>
+            Every venue is different: room shapes, capacity limits, table inventories, ceremony-to-reception flips, catering stations, dance-floor rules, sponsor tables, VIP areas, and the little details your staff already knows by heart. Those configuration options can be hard-coded so guests are planning inside something that feels like your venue, not a generic blank canvas.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10, margin: "0 0 16px" }}>
+            {featureCards.map(([title, body]) => (
+              <div key={title} style={{ padding: "12px 13px", border: `1px solid ${C.lightGray}`, borderRadius: 10, background: `${C.cream}75` }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, marginBottom: 4 }}>{title}</div>
+                <div style={{ fontSize: 13.5, color: C.warmGray, lineHeight: 1.45 }}>{body}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "13px 15px", borderRadius: 12, background: `linear-gradient(135deg, ${C.sage}18, ${C.gold}12)`, border: `1px solid ${C.sage}30`, color: C.charcoal, fontSize: 14.5, lineHeight: 1.6 }}>
+            Interested in a version tailored to your venue? Email us for a free consultation about building and launching your own custom WhereDoTheySit.com.
+          </div>
+        </div>
+        <div style={{ padding: "16px 26px 22px", display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "flex-end", borderTop: `1px solid ${C.lightGray}` }}>
+          <button onClick={onClose} style={{ padding: "9px 18px", border: `1.5px solid ${C.lightGray}`, borderRadius: 10, background: C.white, fontFamily: "inherit", fontSize: 14, color: C.warmGray, cursor: "pointer", fontWeight: 600 }}>Maybe later</button>
+          <a href={CUSTOM_MAILTO} style={{ padding: "9px 20px", border: "none", borderRadius: 10, background: `linear-gradient(135deg, ${C.sage}, ${C.darkSage})`, fontFamily: "inherit", fontSize: 14, color: C.white, textDecoration: "none", fontWeight: 800, display: "inline-flex", alignItems: "center" }}>Email {CUSTOM_EMAIL}</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GuestEditModal({ guest, gm, gc, groups, onClose, onSave, onRemove, isMobile }) {
   const [name, setName] = useState(guest.name);
   const [group, setGroup] = useState(guest.group);
@@ -1385,6 +1431,7 @@ export default function App() {
   const [showExport, setShowExport] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showVenueVersion, setShowVenueVersion] = useState(false);
   const [editingGuest, setEditingGuest] = useState(null);
   const [zoom, setZoom] = useState(() => isMobile ? 0.4 : 1);
   const [pan, setPan] = useState(() => isMobile ? { x: 0, y: 0 } : { x: 0, y: 0 });
@@ -2045,6 +2092,7 @@ export default function App() {
       {showAddTable && <AddTableModal onClose={() => setShowAddTable(false)} onAdd={addTable} />}
       {showExport && <ExportModal tables={tables} guests={guests} gm={gm} gc={gc} eventName={eventName} conflicts={conflicts} onClose={() => setShowExport(false)} />}
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+      {showVenueVersion && <VenueVersionModal onClose={() => setShowVenueVersion(false)} />}
       {confirmAction && <ConfirmModal {...confirmAction} />}
       {showWelcome && <WelcomeModal isMobile={isMobile} onSelect={loadPreset} />}
       {editingGuest && gm[editingGuest] && <GuestEditModal guest={gm[editingGuest]} gm={gm} gc={gc} groups={groups} onClose={() => setEditingGuest(null)} onSave={editGuest} onRemove={removeGuest} isMobile={isMobile} />}
@@ -2092,7 +2140,7 @@ export default function App() {
                       { label: "📂 Load", action: () => { setShowMobileMenu(false); setConfirmAction({ title: "Load a Saved Plan", message: "Choose a file you previously saved. This will replace your current guest list, tables, and layout with whatever is in the file.", confirmLabel: "📂 Choose File", onConfirm: () => { fileInputRef.current?.click(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) }); } },
                       { label: "📤 Export", action: () => { setShowExport(true); setShowMobileMenu(false); } },
                       { label: "? Help", action: () => { setShowHelp(true); setShowMobileMenu(false); } },
-                      { label: "🏛 Venue Version", action: () => { window.location.href = CUSTOM_MAILTO; setShowMobileMenu(false); } },
+                      { label: "🏛 Venue Version", action: () => { setShowVenueVersion(true); setShowMobileMenu(false); } },
                       { label: "☕ Support", action: () => { window.open("https://ko-fi.com/deptappliedmagic", "_blank"); setShowMobileMenu(false); } },
                       { label: "🔄 Start Fresh", action: () => { setShowMobileMenu(false); setConfirmAction({ title: "Start Fresh?", message: "This will clear everything and let you choose a new starting point.", danger: true, onConfirm: () => { startFresh(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) }); } },
                     ].map((item, i, arr) => (
@@ -2108,7 +2156,7 @@ export default function App() {
                 <button onClick={() => setConfirmAction({ title: "Load a Saved Plan", message: "Choose a file you previously saved from WhereDoTheySit. This will replace your current guest list, tables, and layout with whatever is in the file. (Your current work is auto-saved, so you can undo this by refreshing the page.)", confirmLabel: "📂 Choose File", onConfirm: () => { fileInputRef.current?.click(); setConfirmAction(null); }, onClose: () => setConfirmAction(null) })} title="Load layout" style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>📂 Load</button>
                 <button onClick={() => setShowExport(true)} style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>📤 Export</button>
                 <button onClick={() => setShowHelp(true)} style={{ padding: "6px 14px", border: `1.5px solid ${C.lightGray}`, borderRadius: 8, background: C.white, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.warmGray, cursor: "pointer" }}>? Help</button>
-                <a href={CUSTOM_MAILTO} style={{ padding: "6px 14px", border: `1.5px solid ${C.sage}40`, borderRadius: 8, background: `${C.sage}08`, fontFamily: "inherit", fontSize: 13, fontWeight: 700, color: C.darkSage, textDecoration: "none", display: "flex", alignItems: "center" }}>🏛 Venue Version</a>
+                <button onClick={() => setShowVenueVersion(true)} style={{ padding: "6px 14px", border: `1.5px solid ${C.sage}40`, borderRadius: 8, background: `${C.sage}08`, fontFamily: "inherit", fontSize: 13, fontWeight: 700, color: C.darkSage, cursor: "pointer", display: "flex", alignItems: "center" }}>🏛 Venue Version</button>
                 <a href="https://ko-fi.com/deptappliedmagic" target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", border: `1.5px solid ${C.gold}40`, borderRadius: 8, background: `${C.gold}08`, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.gold, textDecoration: "none", display: "flex", alignItems: "center" }}>☕ Support</a>
               </>
             )}
